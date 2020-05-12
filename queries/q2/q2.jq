@@ -1,6 +1,6 @@
 let $bucketWidth := (60 - 15) div 100.0
 let $bucketCenter := 0.375
-for $i in root-file("/mnt/scratch/muellein/root-rumble/Run2012B_SingleMu_small.root", "Events")
+for $i in parquet-file("/home/dan/data/garbage/git/rumble-root-queries/data/Run2012B_SingleMu_small.parquet")
 let $jetSum := sum($i.Jet_pt[])
 let $filtered :=
     if ($jetSum lt 15) then 15

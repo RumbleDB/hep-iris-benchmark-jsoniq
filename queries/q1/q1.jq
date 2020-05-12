@@ -1,7 +1,7 @@
 declare variable $inputPath as string? external;
 let $bucketWidth := (2000 - 0) div 100.0
 let $bucketCenter := $bucketWidth div 2
-for $i in root-file("/home/dan/data/garbage/git/rumble-root-queries/data/Run2012B_SingleMu_small.root", "Events")
+for $i in parquet-file("/home/dan/data/garbage/git/rumble-root-queries/data/Run2012B_SingleMu_small.parquet")
 let $filtered := 
     if ($i.MET_sumet lt 0) then 0
     else
