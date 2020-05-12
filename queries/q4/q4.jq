@@ -1,4 +1,3 @@
-# This one is not correct; it produces no results
 let $bucketWidth := (2000 - 0) div 100.0
 let $bucketCenter := $bucketWidth div 2
 let $filtered := (

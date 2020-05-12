@@ -1,2 +1,4 @@
 #!/usr/bin/env bash
-export PATH=`pwd`:$PATH
+SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
+export PATH=`dirname $SCRIPTPATH`:$PATH
+echo $PATH
