@@ -1,25 +1,25 @@
 let $bucketWidth := (2000 - 0) div 100.0
 let $bucketCenter := $bucketWidth div 2
+
+let $loConst := round(-$bucketCenter div $bucketWidth)
+let $hiConst := round((2000 - $bucketCenter) div $bucketWidth)
+
 let $filtered := (
     for $i in parquet-file("/home/dan/data/garbage/git/rumble-root-queries/data/Run2012B_SingleMu_small.parquet")
-        let $subCount := count(
-            for $j in size($i.Jet_pt)
-            where $i.Jet_pt[[$j]] gt 40 and abs($i.Jet_eta[[$j]]) lt 1
-            return $i.Jet_pt[[$j]])
-        where $subCount gt 1
+        let $subCount := sum(
+            for $j in $i.Jet_pt[]
+                return  if ($j > 40) then 1
+                        else 0)
+        where $subCount > 1
         return $i.MET_sumet)
-let $res := (
-    for $sumet in $filtered
-        let $f := 
-            if ($sumet lt 0) then 0
-            else
-                if ($sumet lt 2000) then $sumet
-                else 2000
-        let $centered := ($f - $bucketCenter) div $bucketWidth
-        let $rounded := round($centered)
-        let $x := $rounded * $bucketWidth + $bucketCenter
-        group by $x
-        order by $x
-        return {"x": $x, "y": count($x)})
-for $j in $res
-return $j
+
+for $i in $filtered
+    let $binned := 
+        if ($i < 0) then $loConst
+        else
+            if ($i < 2000) then round(($i - $bucketCenter) div $bucketWidth)
+            else $hiConst
+    let $x := $binned * $bucketWidth + $bucketCenter
+    group by $x
+    order by $x
+    return {"x": $x, "y": count($i)}

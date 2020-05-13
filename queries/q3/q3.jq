@@ -7,11 +7,11 @@ let $hiConst := round((60 - $bucketCenter) div $bucketWidth)
 let $temp := (
 	for $i in parquet-file("/home/dan/data/garbage/git/rumble-root-queries/data/Run2012B_SingleMu_small.parquet")
 	    let $pointFiltered := (
-	    	for $j in size($i.Jet_pt)
-		        where abs($i.Jet_eta[$j][]) < 1
-		        return 	if ($i.Jet_pt[$j][] < 15) then $loConst
+	    	for $j in (1 to size($i.Jet_pt))
+		        where abs($i.Jet_eta[[$j]]) < 1
+		        return 	if ($i.Jet_pt[[$j]] < 15) then $loConst
 		        		else 
-		        			if ($i.Jet_pt[$j][] < 60) then round(($i.Jet_pt[$j][] - $bucketCenter) div $bucketWidth)
+		        			if ($i.Jet_pt[[$j]] < 60) then round(($i.Jet_pt[[$j]] - $bucketCenter) div $bucketWidth)
 		        			else $hiConst
 		        		)
 	    return $pointFiltered
