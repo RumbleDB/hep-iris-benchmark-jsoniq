@@ -8,7 +8,7 @@ let $filtered := (
 	for $i in parquet-file("/home/dan/data/garbage/git/rumble-root-queries/data/Run2012B_SingleMu_small.parquet")
 		where $i.nMuon > 1
 		let $pairs := (
-			for $iIdx in (1 to size($i.Muon_charge))
+			for $iIdx in (1 to (size($i.Muon_charge) - 1))
 				return for $jIdx in (($iIdx + 1) to size($i.Muon_charge))
 					where $i.Muon_charge[[$iIdx]] != $i.Muon_charge[[$jIdx]]
 					return [$iIdx, $jIdx] 

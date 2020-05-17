@@ -23,6 +23,8 @@ let $bucketCenter := $bucketWidth div 2
 let $loConst := round((15 - $bucketCenter) div $bucketWidth)
 let $hiConst := round((200 - $bucketCenter) div $bucketWidth)
 
+
+
 let $filtered := (
 	for $i in parquet-file("/home/dan/data/garbage/git/rumble-root-queries/data/Run2012B_SingleMu_small.parquet")
 		let $filteredJets := (
@@ -31,8 +33,15 @@ let $filtered := (
 				
 				let $filteredElectrons := (
 					for $electronIdx in (1 to size($i.Electron_pt))
-						where $i.Electron_pt[[$electronIdx]] > 10 and R2($i.Jet_phi[[$jetIdx]], $i.Electron_phi[[$electronIdx]], $i.Jet_eta[[$jetIdx]], $i.Electron_eta[[$electronIdx]]) < 40
-						return $electronIdx
+					
+					let $r2 := R2(
+						$i.Jet_phi[[$jetIdx]], 
+						$i.Electron_phi[[$electronIdx]], 
+						$i.Jet_eta[[$jetIdx]], 
+						$i.Electron_eta[[$electronIdx]])
+
+					where $i.Electron_pt[[$electronIdx]] > 10 and $r2 < 40
+					return $electronIdx
 					)
 				where empty($filteredElectrons)
 
