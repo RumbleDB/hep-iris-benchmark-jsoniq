@@ -1,3 +1,14 @@
+declare function histogramConsts($loBound, $hiBound, $binCount) {
+    let $bucketWidth := ($hiBound - $loBound) div $binCount
+    let $bucketCenter := $bucketWidth div 2
+
+    let $loConst := round(($loBound - $bucketCenter) div $bucketWidth)
+    let $hiConst := round(($hiBound - $bucketCenter) div $bucketWidth)
+
+    return {"bins": $binCount, "width": $bucketWidth, "center": $bucketCenter, "loConst": $loConst, "hiConst": $hiConst,
+            "loBound": $loBound, "hiBound": $hiBound}
+};
+
 declare function sinh($x) {
 	(exp($x) - exp(-$x)) div 2.0
 };
@@ -55,54 +66,54 @@ declare function TriJet($particleOne, $particleTwo, $particleThree) {
 };
 
 declare function MakeParticle($event, $jetIdx) {
-	{"pt": $event.Jet_pt[[$jetIdx]], "eta": $event.Jet_eta[[$jetIdx]], "phi": $event.Jet_phi[[$jetIdx]], "mass": $event.Jet_mass[[$jetIdx]]}
+	{"pt": $event.Jet_pt[[$jetIdx]], "eta": $event.Jet_eta[[$jetIdx]], "phi": $event.Jet_phi[[$jetIdx]], 
+	"mass": $event.Jet_mass[[$jetIdx]]}
 };
 
-let $bucketWidth := (40 - 15) div 100.0
-let $bucketCenter := $bucketWidth div 2
-
-let $loConst := round((15 - $bucketCenter) div $bucketWidth)
-let $hiConst := round((40 - $bucketCenter) div $bucketWidth)
+let $dataPath := "/home/dan/data/garbage/git/rumble-root-queries/data/Run2012B_SingleMu_small.parquet"
+let $histogram := histogramConsts(15, 40, 100)
 
 
 let $filtered := (
-	for $i in parquet-file("/home/dan/data/garbage/git/rumble-root-queries/data/Run2012B_SingleMu_small.parquet")
-		where $i.nJet > 2
-		let $triplets := (
-				for $iIdx in (1 to (size($i.Jet_pt) - 2))
-					return for $jIdx in (($iIdx + 1) to (size($i.Jet_pt) - 1))
-								return for $kIdx in (($jIdx + 1) to size($i.Jet_pt))
-									let $particleOne := MakeParticle($i, $iIdx)
-									let $particleTwo := MakeParticle($i, $jIdx)
-									let $particleThree := MakeParticle($i, $kIdx)
-									let $triJet := TriJet($particleOne, $particleTwo, $particleThree)
+	for $i in parquet-file($dataPath)
+	where $i.nJet > 2
+	let $triplets := (
+		for $iIdx in (1 to (size($i.Jet_pt) - 2))
+		return for $jIdx in (($iIdx + 1) to (size($i.Jet_pt) - 1))
+				return for $kIdx in (($jIdx + 1) to size($i.Jet_pt))
+					let $particleOne := MakeParticle($i, $iIdx)
+					let $particleTwo := MakeParticle($i, $jIdx)
+					let $particleThree := MakeParticle($i, $kIdx)
+					let $triJet := TriJet($particleOne, $particleTwo, $particleThree)
 
-									return {"idx": [$iIdx, $jIdx, $kIdx], "mass": abs(172.5 - $triJet.mass)} 
-				)
-
-		let $minMass := min($triplets.mass)
-
-		let $minTriplet := (
-			for $j in $triplets
-				where $j.mass = $minMass
-				return $j
-			)
-
-		let $pT := (
-			for $j in $minTriplet.idx[]
-				return $i.Jet_pt[[$j]]
-			)
-
-		return $pT
+					return {"idx": [$iIdx, $jIdx, $kIdx], "mass": abs(172.5 - $triJet.mass)} 
 	)
 
+	let $minMass := min($triplets.mass)
+
+	let $minTriplet := (
+		for $j in $triplets
+		where $j.mass = $minMass
+		return $j
+	)
+
+	let $pT := (
+		for $j in $minTriplet.idx[]
+		return $i.Jet_pt[[$j]]
+	)
+
+	return $pT
+)
+
+
 for $i in $filtered
-    let $binned := 
-        if ($i < 15) then $loConst
-        else
-            if ($i < 40) then round(($i - $bucketCenter) div $bucketWidth)
-            else $hiConst
-    let $x := $binned * $bucketWidth + $bucketCenter
-    group by $x
-    order by $x
-    return {"x": $x, "y": count($i)}
+let $y :=   if ($i < $histogram.loBound) 
+            then $histogram.loConst
+            else
+                if ($i < $histogram.hiBound)
+                then round(($i - $histogram.center) div $histogram.width)
+                else $histogram.hiConst
+let $x := $y * $histogram.width + $histogram.center
+group by $x
+order by $x
+return {"x": $x, "y": count($i)}

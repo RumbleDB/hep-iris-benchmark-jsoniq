@@ -2,7 +2,8 @@
 
 # Set the spark submit
 spark=/home/dan/data/software/spark-2.4.5-bin-hadoop2.7/bin/spark-submit
-rumble=/home/dan/data/software/rumble/spark-rumble-1.5.jar
+# rumble=/home/dan/data/software/rumble/spark-rumble-1.5.jar
+rumble=/home/dan/data/software/rumble/spark-rumble-1.6.2.jar
 export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
 export PATH=$JAVA_HOME/bin:$PATH
 

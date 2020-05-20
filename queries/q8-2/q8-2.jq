@@ -1,3 +1,14 @@
+declare function histogramConsts($loBound, $hiBound, $binCount) {
+    let $bucketWidth := ($hiBound - $loBound) div $binCount
+    let $bucketCenter := $bucketWidth div 2
+
+    let $loConst := round(($loBound - $bucketCenter) div $bucketWidth)
+    let $hiConst := round(($hiBound - $bucketCenter) div $bucketWidth)
+
+    return {"bins": $binCount, "width": $bucketWidth, "center": $bucketCenter, "loConst": $loConst, "hiConst": $hiConst,
+            "loBound": $loBound, "hiBound": $hiBound}
+};
+
 declare function sinh($x) {
 	(exp($x) - exp(-$x)) div 2.0
 };
@@ -53,7 +64,6 @@ declare function AddPtEtaPhiM2($particleOne, $particleTwo) {
 		)
 };
 
-(: When calling the function below, the $phi1 parameter should belong to the other lepton :)
 declare function DeltaPhi($phi1, $phi2) {
 	($phi1 - $phi2 + pi()) mod (2 * pi()) - pi()
 };
@@ -78,58 +88,50 @@ declare function MakeParticle($event, $idx) {
 	{"pt": $event.pt[[$idx]], "eta": $event.eta[[$idx]], "phi": $event.phi[[$idx]], "mass": $event.mass[[$idx]]}
 };
 
+let $dataPath := "/home/dan/data/garbage/git/rumble-root-queries/data/Run2012B_SingleMu_small.parquet"
+let $histogram := histogramConsts(15, 60, 100)
+
+
 let $filtered := (
-	for $i in parquet-file("/home/dan/data/garbage/git/rumble-root-queries/data/Run2012B_SingleMu_small.parquet")
-		where ($i.nMuon + $i.nElectron) > 2 
-		let $leptons := ConcatLeptons($i)
+	for $i in parquet-file($dataPath)
+	where ($i.nMuon + $i.nElectron) > 2 
+	let $leptons := ConcatLeptons($i)
 
-		let $pairs := (
-			for $iIdx in (1 to (size($leptons.pt) - 1))
-				return for $jIdx in (($iIdx + 1) to size($leptons.pt))
-					where $leptons.type[[$iIdx]] = $leptons.type[[$jIdx]] and $leptons.charge[[$iIdx]] != $leptons.charge[[$jIdx]]
-					let $particleOne := MakeParticle($leptons, $iIdx)
-					let $particleTwo := MakeParticle($leptons, $jIdx)
-					return {"i": $iIdx, "j": $jIdx, "mass": AddPtEtaPhiM2($particleOne, $particleTwo).mass}
-			)
-		where exists($pairs)
+	let $pairs := (
+		for $iIdx in (1 to (size($leptons.pt) - 1))
+			return for $jIdx in (($iIdx + 1) to size($leptons.pt))
+				where $leptons.type[[$iIdx]] = $leptons.type[[$jIdx]] and $leptons.charge[[$iIdx]] != $leptons.charge[[$jIdx]]
+				let $particleOne := MakeParticle($leptons, $iIdx)
+				let $particleTwo := MakeParticle($leptons, $jIdx)
+				return {"i": $iIdx, "j": $jIdx, "mass": abs(91.2 - AddPtEtaPhiM2($particleOne, $particleTwo).mass)}
+	)
+	where exists($pairs)
 
-		let $minMass := min($pairs.mass)
-
-		let $minPair := (
-			for $j in $pairs
-				where $j.mass = $minMass
-				return $j
-			)
-
-		let $maxOtherPt := max(
-			for $j in (1 to size($leptons.pt))
-			where $j != $minPair.i and $j != $minPair.j
-			return $leptons.pt[[$j]]
-			)
-
-		let $otherLepton := (
-			for $j in (1 to size($leptons.pt))
-			where $j != $minPair.i and $j != $minPair.j and $leptons.pt[[$j]] = $maxOtherPt
-			let $transverseMass := 2 * $i.MET_pt * $maxOtherPt * (1.0 - cos(DeltaPhi($leptons.phi[[$j]], $i.MET_phi)))
-			return {"idx": $j, "transverseMass": $transverseMass, "pt": $maxOtherPt}
-			)
-
-		return $otherLepton
+	let $minMass := min($pairs.mass)
+	let $minPair := (
+		for $j in $pairs
+		where $j.mass = $minMass
+		return $j
 	)
 
-let $bucketWidth := (60 - 15) div 100.0
-let $bucketCenter := $bucketWidth div 2
+	let $maxOtherPt := max(
+		for $j in (1 to size($leptons.pt))
+		where $j != $minPair.i and $j != $minPair.j
+		return $leptons.pt[[$j]]
+	)
 
-let $loConst := round((14.55 - $bucketCenter) div $bucketWidth)
-let $hiConst := round((40 - $bucketCenter) div $bucketWidth)
+	return $maxOtherPt
+)
+
 
 for $i in $filtered
-    let $binned := 
-        if ($i.pt < 15) then $loConst
-        else
-            if ($i.pt < 40) then round(($i.pt - $bucketCenter) div $bucketWidth)
-            else $hiConst
-    let $x := $binned * $bucketWidth + $bucketCenter
-    group by $x
-    order by $x
-    return {"x": $x, "y": count($i.pt)}
+let $y :=   if ($i < $histogram.loBound) 
+            then $histogram.loConst
+            else
+                if ($i < $histogram.hiBound)
+                then round(($i - $histogram.center) div $histogram.width)
+                else $histogram.hiConst
+let $x := $y * $histogram.width + $histogram.center
+group by $x
+order by $x
+return {"x": $x, "y": count($i)}

@@ -1,16 +1,31 @@
-let $bucketWidth := (2000 - 0) div 100.0
-let $bucketCenter := $bucketWidth div 2
+declare function histogramConsts($loBound, $hiBound, $binCount) {
+	let $bucketWidth := ($hiBound - $loBound) div $binCount
+	let $bucketCenter := $bucketWidth div 2
 
-let $loConst := round(-$bucketCenter div $bucketWidth)
-let $hiConst := round((2000 - $bucketCenter) div $bucketWidth)
+	let $loConst := round(($loBound - $bucketCenter) div $bucketWidth)
+	let $hiConst := round(($hiBound - $bucketCenter) div $bucketWidth)
 
-for $i in parquet-file("/home/dan/data/garbage/git/rumble-root-queries/data/Run2012B_SingleMu_small.parquet")
-	let $filtered := 
-	    if ($i.MET_sumet lt 0) then $loConst
-	    else
-	        if ($i.MET_sumet lt 2000) then round(($i.MET_sumet - $bucketCenter) div $bucketWidth)
-	        else $hiConst
-	let $x := $filtered * $bucketWidth + $bucketCenter
-	group by $x
-	order by $x
-	return {"x": $x, "y": count($i)}
+	return {"bins": $binCount, "width": $bucketWidth, "center": $bucketCenter, "loConst": $loConst, "hiConst": $hiConst,
+			"loBound": $loBound, "hiBound": $hiBound}
+};
+
+
+let $dataPath := "/home/dan/data/garbage/git/rumble-root-queries/data/Run2012B_SingleMu_small.parquet"
+let $histogram := histogramConsts(0, 2000, 100)
+
+let $filtered := (
+	for $i in parquet-file($dataPath) 
+	return $i.MET_sumet
+) 
+
+for $i in $filtered
+let $y := 	if ($i < $histogram.loBound) 
+		  	then $histogram.loConst
+		  	else
+				if ($i < $histogram.hiBound)
+		        then round(($i - $histogram.center) div $histogram.width)
+		        else $histogram.hiConst
+let $x := $y * $histogram.width + $histogram.center
+group by $x
+order by $x
+return {"x": $x, "y": count($i)}
