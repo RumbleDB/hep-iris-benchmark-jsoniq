@@ -13,10 +13,7 @@ declare function histogramConsts($loBound, $hiBound, $binCount) {
 let $dataPath := "/home/dan/data/garbage/git/rumble-root-queries/data/Run2012B_SingleMu_small.parquet"
 let $histogram := histogramConsts(0, 2000, 100)
 
-let $filtered := (
-	for $i in parquet-file($dataPath) 
-	return $i.MET_sumet
-) 
+let $filtered := parquet-file($dataPath).MET_sumet
 
 for $i in $filtered
 let $y := if ($i < $histogram.loBound) 

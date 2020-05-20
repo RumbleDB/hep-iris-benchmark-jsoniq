@@ -13,11 +13,7 @@ let $dataPath := "/home/dan/data/garbage/git/rumble-root-queries/data/Run2012B_S
 let $histogram := histogramConsts(15, 60, 100)
 
 
-let $filtered := (
-	for $i in parquet-file($dataPath)
-	return for $jet in $i.Jet_pt[]
-		   return $jet
-)
+let $filtered := parquet-file($dataPath).Jet_pt[]
 
 
 for $i in $filtered
