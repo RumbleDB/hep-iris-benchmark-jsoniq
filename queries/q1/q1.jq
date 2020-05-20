@@ -19,12 +19,12 @@ let $filtered := (
 ) 
 
 for $i in $filtered
-let $y := 	if ($i < $histogram.loBound) 
-		  	then $histogram.loConst
-		  	else
-				if ($i < $histogram.hiBound)
-		        then round(($i - $histogram.center) div $histogram.width)
-		        else $histogram.hiConst
+let $y := if ($i < $histogram.loBound) 
+			  	then $histogram.loConst
+			  	else
+					if ($i < $histogram.hiBound)
+			        then round(($i - $histogram.center) div $histogram.width)
+			        else $histogram.hiConst
 let $x := $y * $histogram.width + $histogram.center
 group by $x
 order by $x
