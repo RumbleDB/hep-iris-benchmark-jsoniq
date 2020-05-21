@@ -12,6 +12,78 @@ declare function buildHistogram($rawData, $histoConsts) {
     return {"x": $x, "y": count($y)}
 };
 
+declare function MakeMuons($event) {
+    for $i in (1 to size($event.Muon_pt))
+    return {
+        "idx": $i,
+        "pt": $event.Muon_pt[[$i]],
+        "eta": $event.Muon_eta[[$i]],
+        "phi": $event.Muon_phi[[$i]],
+        "mass": $event.Muon_mass[[$i]],
+        "charge": $event.Muon_charge[[$i]],
+        "pfRelIso03_all": $event.Muon_pfRelIso03_all[[$i]],
+        "pfRelIso04_all": $event.Muon_pfRelIso04_all[[$i]],
+        "tightId": $event.Muon_tightId[[$i]],
+        "softId": $event.Muon_softId[[$i]],
+        "dxy": $event.Muon_dxy[[$i]],
+        "dxyErr": $event.Muon_dxyErr[[$i]],
+        "dz": $event.Muon_dz[[$i]],
+        "dzErr": $event.Muon_dzErr[[$i]],
+        "jetIdx": $event.Muon_jetIdx[[$i]],
+        "genPartIdx": $event.Muon_genPartIdx[[$i]]
+    }
+};
+
+declare function MakeElectrons($event) {
+    for $i in (1 to size($event.Electron_pt))
+    return {
+        "idx": $i,
+        "pt": $event.Electron_pt[[$i]],
+        "eta": $event.Electron_eta[[$i]],
+        "phi": $event.Electron_phi[[$i]],
+        "mass": $event.Electron_mass[[$i]],
+        "pfRelIso03_all": $event.Electron_pfRelIso03_all[[$i]],
+        "dxy": $event.Electron_dxy[[$i]],
+        "dxyErr": $event.Electron_dxyErr[[$i]],
+        "dz": $event.Electron_dz[[$i]],
+        "dzErr": $event.Electron_dzErr[[$i]],
+        "cutBasedId": $event.Electron_cutBasedId[[$i]],
+        "pfId": $event.Electron_pfId[[$i]],
+        "jetIdx": $event.Electron_jetIdx[[$i]],
+        "genPartIdx": $event.Electron_genPartIdx[[$i]]
+    }
+};
+
+declare function MakeJet($event) {
+    for $i in (1 to size($event.Jet_pt))
+    return {
+        "idx": $i,
+        "pt": $event.Jet_pt[[$i]],
+        "eta": $event.Jet_eta[[$i]],
+        "phi": $event.Jet_phi[[$i]],
+        "mass": $event.Jet_mass[[$i]],
+        "puId": $event.Jet_puId[[$i]],
+        "btag": $event.Jet_btag[[$i]]
+    }
+};
+
+declare function RestructureEvent($event) {
+    let $muonList := MakeMuons($event)
+    let $electronList := MakeElectrons($event)
+    let $jetList := MakeJet($event)
+    return {| $event, {"muons": $muonList, "electrons": $electronList, "jets": $jetList} |}
+};
+
+declare function RestructureData($data) {
+    for $event in $data
+    return RestructureEvent($event)
+};
+
+declare function RestructureDataParquet($path) {
+    for $event in parquet-file($path)
+    return RestructureEvent($event)
+};
+
 declare function histogramConsts($loBound, $hiBound, $binCount) {
     let $bucketWidth := ($hiBound - $loBound) div $binCount
     let $bucketCenter := $bucketWidth div 2
@@ -27,9 +99,9 @@ declare function DeltaPhi($phi1, $phi2) {
 	($phi1 - $phi2 + pi()) mod (2 * pi()) - pi()
 };
 
-declare function DeltaR($phi1, $phi2, $eta1, $eta2) {
-	let $deltaEta := $eta1 - $eta2
-	let $deltaPhi := DeltaPhi($phi1, $phi2)
+declare function DeltaR($p1, $p2) {
+	let $deltaEta := $p1.eta - $p2.eta
+	let $deltaPhi := DeltaPhi($p1.phi, $p2.phi)
 	return sqrt($deltaPhi * $deltaPhi + $deltaEta * $deltaEta)
 };
 
@@ -38,44 +110,32 @@ let $histogram := histogramConsts(15, 200, 100)
 
 
 let $filtered := (
-	for $i in parquet-file($dataPath)
+	for $i in RestructureDataParquet($dataPath)
+	
 	let $filteredJets := (
-		for $jetIdx in (1 to size($i.Jet_pt))
-		where $i.Jet_pt[[$jetIdx]] > 30
+		for $jet in $i.jets
+		where $jet.pt > 30
 			
 		let $filteredElectrons := (
-			for $electronIdx in (1 to size($i.Electron_pt))
-				
-			let $deltaR := DeltaR(
-				$i.Jet_phi[[$jetIdx]], 
-				$i.Electron_phi[[$electronIdx]], 
-				$i.Jet_eta[[$jetIdx]], 
-				$i.Electron_eta[[$electronIdx]])
-
-			where $i.Electron_pt[[$electronIdx]] > 10 and $deltaR < 40
-			return $electronIdx
+			for $electron in $i.electrons
+			where $electron.pt > 10 and DeltaR($jet, $electron) < 40
+			return $electron
 		)
 		where empty($filteredElectrons)
 
+		(: The queries might not be working properly since I'm not using something like for $j in $i.jets[] - currently I'm using for $j in $i.jets - :)
 		let $filteredMuons := (
-			for $muonIdx in (1 to size($i.Muon_pt))
-
-			let $deltaR := DeltaR(
-				$i.Jet_phi[[$jetIdx]], 
-				$i.Muon_phi[[$muonIdx]], 
-				$i.Jet_eta[[$jetIdx]], 
-				$i.Muon_eta[[$muonIdx]])
-
-			where $i.Muon_pt[[$muonIdx]] > 10 and $deltaR < 40
-			return $muonIdx
+			for $muon in $i.muons
+			where $muon.pt > 10 and DeltaR($jet, $muon) < 40
+			return $muon
 		)
 		where empty($filteredMuons)
 			
-		return $i.Jet_pt[[$jetIdx]]
+		return $jet
 	)
 	where exists($filteredJets)
 	
-	return sum($filteredJets)
+	return sum($filteredJets.pt)
 )
 
 
