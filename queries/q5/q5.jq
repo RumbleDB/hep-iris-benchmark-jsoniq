@@ -111,10 +111,9 @@ let $filtered := (
 	for $i in RestructureDataParquet($dataPath)
 	where $i.nMuon > 1
 	
-	(: Maybe this return nothing since I'm not using return before the 2nd for :)
 	let $masses := (
-		for $m1 in $i.muons
-			for $m2 in $i.muons
+		for $m1 in $i.muons[]
+			for $m2 in $i.muons[]
 			where $m1.idx < $m2.idx 
 			let $invariantMass := computeInvariantMass($m1, $m2)
 			where 60 < $invariantMass and $invariantMass < 120

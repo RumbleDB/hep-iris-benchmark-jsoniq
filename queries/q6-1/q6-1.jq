@@ -160,9 +160,9 @@ let $filtered := (
 	where $i.nJet > 2
 
 	let $triplets := (
-		for $j1 in $i.jets
-			for $j2 in $i.jets
-				for $j3 in $i.jets
+		for $j1 in $i.jets[]
+			for $j2 in $i.jets[]
+				for $j3 in $i.jets[]
 				where $j1.idx < $j2.idx and $j2.idx < $j3.idx 
 				(: let $triJetMass := abs(172.5 - TriJet($j1, $j2, $j3).mass) :)
 				let $triJetMass := abs(172.5 - $j1.mass - $j2.mass - $j3.mass)
@@ -173,7 +173,7 @@ let $filtered := (
 	return 	for $j in $triplets
 			count $c
 			where $c <= 1
-			return $j.pt
+			return $j.pt[]
 )
 
 

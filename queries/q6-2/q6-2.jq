@@ -154,29 +154,32 @@ declare function TriJet($particleOne, $particleTwo, $particleThree) {
 let $dataPath := "/home/dan/data/garbage/git/rumble-root-queries/data/Run2012B_SingleMu_small.parquet"
 let $histogram := histogramConsts(0, 1, 100)
 
+let $temp := (
+	for $i in RestructureDataParquet($dataPath)[position() lt 11]
+	return $i
+)
 
 let $filtered := (
-	for $i in RestructureDataParquet($dataPath)
+	for $i in $temp 
 	where $i.nJet > 2
 
 	let $triplets := (
-		for $j1 in $i.jets
-			for $j2 in $i.jets
-				for $j3 in $i.jets
+		for $j1 in $i.jets[]
+			for $j2 in $i.jets[]
+				for $j3 in $i.jets[]
 				where $j1.idx < $j2.idx and $j2.idx < $j3.idx 
-				(: let $triJetMass := abs(172.5 - TriJet($j1, $j2, $j3).mass) :)
 				let $triJetMass := abs(172.5 - $j1.mass - $j2.mass - $j3.mass)
-				order by $triJetMass
-				return {"btag": [$j1.btag, $j2.btag, $j3.btag], "mass": $triJetMass} 
+				return {"btag": ($j1.btag, $j2.btag, $j3.btag), "mass": $triJetMass} 
 	)
 
-	return max(
+	let $triplets := (
 		for $j in $triplets
-		count $c
-		where $c <= 1
-		return $j.btag[]
+		order by $triplets.mass
+		return $j.btag
 	)
+
+	return $triplets
 )
 
-
-return buildHistogram($filtered, $histogram)
+for $i in $filtered
+return $i
