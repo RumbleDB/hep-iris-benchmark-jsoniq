@@ -1,3 +1,17 @@
+declare function buildHistogram($rawData, $histoConsts) {
+    for $i in $rawData
+    let $y :=     if ($i < $histoConsts.loBound) 
+                  then $histoConsts.loConst
+                  else
+                    if ($i < $histoConsts.hiBound)
+                    then round(($i - $histoConsts.center) div $histoConsts.width)
+                    else $histoConsts.hiConst
+    let $x := $y * $histoConsts.width + $histoConsts.center
+    group by $x
+    order by $x
+    return {"x": $x, "y": count($y)}
+};
+
 declare function histogramConsts($loBound, $hiBound, $binCount) {
     let $bucketWidth := ($hiBound - $loBound) div $binCount
     let $bucketCenter := $bucketWidth div 2
@@ -65,14 +79,4 @@ let $filtered := (
 )
 
 
-for $i in $filtered
-let $y := if ($i < $histogram.loBound) 
-          then $histogram.loConst
-          else
-              if ($i < $histogram.hiBound)
-              then round(($i - $histogram.center) div $histogram.width)
-              else $histogram.hiConst
-let $x := $y * $histogram.width + $histogram.center
-group by $x
-order by $x
-return {"x": $x, "y": count($i)}
+return buildHistogram($filtered, $histogram)
