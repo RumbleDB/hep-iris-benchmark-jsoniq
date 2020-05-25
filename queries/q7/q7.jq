@@ -113,19 +113,18 @@ let $filtered := (
 	for $i in RestructureDataParquet($dataPath)
 	
 	let $filteredJets := (
-		for $jet in $i.jets
+		for $jet in $i.jets[]
 		where $jet.pt > 30
 			
 		let $filteredElectrons := (
-			for $electron in $i.electrons
+			for $electron in $i.electrons[]
 			where $electron.pt > 10 and DeltaR($jet, $electron) < 40
 			return $electron
 		)
 		where empty($filteredElectrons)
 
-		(: The queries might not be working properly since I'm not using something like for $j in $i.jets[] - currently I'm using for $j in $i.jets - :)
 		let $filteredMuons := (
-			for $muon in $i.muons
+			for $muon in $i.muons[]
 			where $muon.pt > 10 and DeltaR($jet, $muon) < 40
 			return $muon
 		)
