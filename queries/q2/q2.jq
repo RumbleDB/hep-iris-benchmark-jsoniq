@@ -1,15 +1,15 @@
 declare function buildHistogram($rawData, $histoConsts) {
-    for $i in $rawData
-    let $y := if ($i < $histoConsts.loBound) 
-              then $histoConsts.loConst
-              else
-                if ($i < $histoConsts.hiBound)
-                then round(($i - $histoConsts.center) div $histoConsts.width)
-                else $histoConsts.hiConst
-    let $x := $y * $histoConsts.width + $histoConsts.center
-    group by $x
-    order by $x
-    return {"x": $x, "y": count($y)}
+  for $i in $rawData
+  let $y := if ($i < $histoConsts.loBound) 
+            then $histoConsts.loConst
+            else
+              if ($i < $histoConsts.hiBound)
+              then round(($i - $histoConsts.center) div $histoConsts.width)
+              else $histoConsts.hiConst
+  let $x := $y * $histoConsts.width + $histoConsts.center
+  group by $x
+  order by $x
+  return {"x": $x, "y": count($y)}
 };
 
 declare function histogramConsts($loBound, $hiBound, $binCount) {
@@ -20,7 +20,7 @@ declare function histogramConsts($loBound, $hiBound, $binCount) {
 	let $hiConst := round(($hiBound - $bucketCenter) div $bucketWidth)
 
 	return {"bins": $binCount, "width": $bucketWidth, "center": $bucketCenter, "loConst": $loConst, "hiConst": $hiConst,
-			"loBound": $loBound, "hiBound": $hiBound}
+			    "loBound": $loBound, "hiBound": $hiBound}
 };
 
 let $dataPath := "/home/dan/data/garbage/git/rumble-root-queries/data/Run2012B_SingleMu_small.parquet"
