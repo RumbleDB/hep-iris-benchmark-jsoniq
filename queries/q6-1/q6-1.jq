@@ -82,7 +82,7 @@ declare function RestructureEvent($event) {
   let $muonList := MakeMuons($event)
   let $electronList := MakeElectrons($event)
   let $jetList := MakeJet($event)
-  return {| $event, {"muons": $muonList, "electrons": $electronList, "jets": $jetList} |}
+  return {| $event, {"muons": [ $muonList ], "electrons": [ $electronList ], "jets": [ $jetList ]} |}
 };
 
 declare function RestructureData($data) {
