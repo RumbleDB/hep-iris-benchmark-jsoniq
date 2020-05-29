@@ -23,6 +23,78 @@ declare function histogramConsts($loBound, $hiBound, $binCount) {
             "loBound": $loBound, "hiBound": $hiBound}
 };
 
+declare function MakeMuons($event) {
+    for $i in (1 to size($event.Muon_pt))
+    return {
+        "idx": $i,
+        "pt": $event.Muon_pt[[$i]],
+        "eta": $event.Muon_eta[[$i]],
+        "phi": $event.Muon_phi[[$i]],
+        "mass": $event.Muon_mass[[$i]],
+        "charge": $event.Muon_charge[[$i]],
+        "pfRelIso03_all": $event.Muon_pfRelIso03_all[[$i]],
+        "pfRelIso04_all": $event.Muon_pfRelIso04_all[[$i]],
+        "tightId": $event.Muon_tightId[[$i]],
+        "softId": $event.Muon_softId[[$i]],
+        "dxy": $event.Muon_dxy[[$i]],
+        "dxyErr": $event.Muon_dxyErr[[$i]],
+        "dz": $event.Muon_dz[[$i]],
+        "dzErr": $event.Muon_dzErr[[$i]],
+        "jetIdx": $event.Muon_jetIdx[[$i]],
+        "genPartIdx": $event.Muon_genPartIdx[[$i]]
+    }
+};
+
+declare function MakeElectrons($event) {
+    for $i in (1 to size($event.Electron_pt))
+    return {
+        "idx": $i,
+        "pt": $event.Electron_pt[[$i]],
+        "eta": $event.Electron_eta[[$i]],
+        "phi": $event.Electron_phi[[$i]],
+        "mass": $event.Electron_mass[[$i]],
+        "pfRelIso03_all": $event.Electron_pfRelIso03_all[[$i]],
+        "dxy": $event.Electron_dxy[[$i]],
+        "dxyErr": $event.Electron_dxyErr[[$i]],
+        "dz": $event.Electron_dz[[$i]],
+        "dzErr": $event.Electron_dzErr[[$i]],
+        "cutBasedId": $event.Electron_cutBasedId[[$i]],
+        "pfId": $event.Electron_pfId[[$i]],
+        "jetIdx": $event.Electron_jetIdx[[$i]],
+        "genPartIdx": $event.Electron_genPartIdx[[$i]]
+    }
+};
+
+declare function MakeJet($event) {
+    for $i in (1 to size($event.Jet_pt))
+    return {
+        "idx": $i,
+        "pt": $event.Jet_pt[[$i]],
+        "eta": $event.Jet_eta[[$i]],
+        "phi": $event.Jet_phi[[$i]],
+        "mass": $event.Jet_mass[[$i]],
+        "puId": $event.Jet_puId[[$i]],
+        "btag": $event.Jet_btag[[$i]]
+    }
+};
+
+declare function RestructureEvent($event) {
+    let $muonList := MakeMuons($event)
+    let $electronList := MakeElectrons($event)
+    let $jetList := MakeJet($event)
+    return {| $event, {"muons": $muonList, "electrons": $electronList, "jets": $jetList} |}
+};
+
+declare function RestructureData($data) {
+    for $event in $data
+    return RestructureEvent($event)
+};
+
+declare function RestructureDataParquet($path) {
+    for $event in parquet-file($path)
+    return RestructureEvent($event)
+};
+
 declare function sinh($x) {
 	(exp($x) - exp(-$x)) div 2.0
 };
@@ -83,19 +155,13 @@ declare function DeltaPhi($phi1, $phi2) {
 };
 
 declare function ConcatLeptons($event) {
-	let $nLepton := $event.nMuon + $event.nElectron
-	let $pt := ($event.Muon_pt[], $event.Electron_pt[])
-	let $eta := ($event.Muon_eta[], $event.Electron_eta[])
-	let $phi := ($event.Muon_phi[], $event.Electron_phi[])
-	let $mass := ($event.Muon_mass[], $event.Electron_mass[])
-	let $charge := ($event.Muon_charge[], $event.Electron_charge[])
+    let $nLepton := $event.nMuon + $event.nElectron
+    let $leptons := ($event.muons[], $event.electrons[])
 
-	let $m := for $i in (1 to size($event.Muon_pt)) return "m"
-	let $e := for $i in (1 to size($event.Electron_pt)) return "e"
+    let $e := for $i in (1 to count($event.electrons[])) return "e"
+    let $m := for $i in (1 to count($event.muons[])) return "m"
 
-	let $type := ($m, $e)
-
-	return {"nLepton": $nLepton, "pt": $pt, "eta": $eta, "phi": $phi, "mass": $mass, "charge": $charge, "type": $type}
+    return {"nLepton": $nLepton, "leptons": $leptons, "type": ($m, $e)}
 };
 
 declare function MakeParticle($event, $idx) {
@@ -107,7 +173,7 @@ let $histogram := histogramConsts(15, 60, 100)
 
 
 let $filtered := (
-	for $i in parquet-file($dataPath)
+	for $i in RestructureDataParquet($dataPath)
 	where ($i.nMuon + $i.nElectron) > 2 
 	let $leptons := ConcatLeptons($i)
 
