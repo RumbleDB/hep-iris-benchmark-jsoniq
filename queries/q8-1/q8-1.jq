@@ -82,7 +82,7 @@ declare function RestructureEvent($event) {
   let $muonList := MakeMuons($event)
   let $electronList := MakeElectrons($event)
   let $jetList := MakeJet($event)
-  return {| $event, {"muons": $muonList, "electrons": $electronList, "jets": $jetList} |}
+  return {| $event, {"muons": [ $muonList ], "electrons": [ $electronList ], "jets": [ $jetList ]} |}
 };
 
 declare function RestructureData($data) {
@@ -168,59 +168,42 @@ declare function ConcatLeptons($event) {
   return ($muons, $electrons)
 };
 
-declare function MakeParticle($event, $idx) {
-  {"pt": $event.pt[[$idx]], "eta": $event.eta[[$idx]], "phi": $event.phi[[$idx]], "mass": $event.mass[[$idx]]}
-};
-
 let $dataPath := "/home/dan/data/garbage/git/rumble-root-queries/data/Run2012B_SingleMu_small.parquet"
 let $histogram := histogramConsts(15, 250, 100)
 
-let $tempData := (
-  for $i in parquet-file($dataPath)
-  count $c 
-  where $c < 101
-  return $i
-)
-
 
 let $filtered := (
-  for $i in RestructureData($tempData)
-  where ($i.nMuon + $i.nElectron) > 2 
-  let $leptons := ConcatLeptons($i)
+  for $i in RestructureDataParquet($dataPath)
+  let $leptonSize := integer($i.nMuon + $i.nElectron)
+  where $leptonSize > 2 
 
-  
+  let $leptons := ConcatLeptons($i)
   let $bestPair := (
-    for $l1Idx in (1 to (size($leptons) - 1)) 
-      for $l2Idx in (($l1Idx + 1) to (size($leptons))) 
-      let $l1 := $leptons[[$l1Idx]]
-      let $l2 := $leptons[[$l2Idx]]
+    for $l1Idx in (1 to ($leptonSize - 1)) 
+      for $l2Idx in (($l1Idx + 1) to $leptonSize) 
+      let $l1 := $leptons[$l1Idx]
+      let $l2 := $leptons[$l2Idx]
       where $l1.type = $l2.type and $l1.charge != $l2.charge
       let $mass := abs(91.2 - AddPtEtaPhiM2($l1, $l2).mass)
       order by $mass
       count $c 
       where $c <= 1
-      return [$l1Idx, $l2Idx]
+      return {"i": $l1Idx, "j": $l2Idx}
   )
   where exists($bestPair)
 
-  let $otherLepton := max(
+  let $otherL := (
     for $l in $leptons
     count $c 
-    where $j != $minPair.i and $j != $minPair.j
-    return $leptons.pt[[$j]]
+    where $c != $bestPair.i and $c != $bestPair.j
+    order by $l.pt descending
+    count $d 
+    where $d <= 1
+    return $l
   )
 
-  let $otherLeptonMass := (
-    for $j in (1 to size($leptons.pt))
-    where $j != $minPair.i and $j != $minPair.j and $leptons.pt[[$j]] = $maxOtherPt
-    let $transverseMass := 2 * $i.MET_pt * $maxOtherPt * (1.0 - cos(DeltaPhi($i.MET_phi, $leptons.phi[[$j]])))
-    return $transverseMass
-  )
-
-  return $otherLeptonMass
-
-  return {"asd": $bestPair, "leptons": $leptons}
+  return 2 * $i.MET_pt * $otherL.pt * (1.0 - cos(DeltaPhi($i.MET_phi, $otherL.phi)))
 )
 
 
-return $filtered
+return buildHistogram($filtered, $histogram)
