@@ -168,7 +168,7 @@ declare function ConcatLeptons($event) {
   return ($muons, $electrons)
 };
 
-let $dataPath := "/home/dan/data/garbage/git/rumble-root-queries/data/Run2012B_SingleMu_small.parquet"
+let $dataPath := "/home/dan/data/garbage/git/rumble-root-queries/rumble/data/Run2012B_SingleMu_small.parquet"
 let $histogram := histogramConsts(15, 60, 100)
 
 

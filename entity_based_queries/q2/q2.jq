@@ -23,7 +23,7 @@ declare function histogramConsts($loBound, $hiBound, $binCount) {
 			    "loBound": $loBound, "hiBound": $hiBound}
 };
 
-let $dataPath := "/home/dan/data/garbage/git/rumble-root-queries/data/Run2012B_SingleMu_small.parquet"
+let $dataPath := "/home/dan/data/garbage/git/rumble-root-queries/rumble/data/Run2012B_SingleMu_small.parquet"
 let $histogram := histogramConsts(15, 60, 100)
 
 

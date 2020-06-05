@@ -31,7 +31,7 @@ declare function computeInvariantMass($event, $particleOneIdx, $particleTwoIdx) 
 	return $invariant_mass
 };
 
-let $dataPath := "/home/dan/data/garbage/git/rumble-root-queries/data/Run2012B_SingleMu_small.parquet"
+let $dataPath := "/home/dan/data/garbage/git/rumble-root-queries/rumble/data/Run2012B_SingleMu_small.parquet"
 let $histogram := histogramConsts(0, 2000, 100)
 
 
