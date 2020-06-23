@@ -85,6 +85,64 @@ declare function RestructureEvent($event) {
   return {| $event, {"muons": [ $muonList ], "electrons": [ $electronList ], "jets": [ $jetList ]} |}
 };
 
+
+declare function sinh($x) {
+	(exp($x) - exp(-$x)) div 2.0
+};
+
+declare function cosh($x) {
+	(exp($x) + exp(-$x)) div 2.0
+};
+
+declare function PtEtaPhiM2PxPyPzE($vect) {
+	let $x := $vect.pt * cos($vect.phi)
+	let $y := $vect.pt * sin($vect.phi)
+	let $z := $vect.pt * sinh($vect.eta)
+	let $temp := $vect.pt * cosh($vect.eta)
+	let $e := $temp * $temp + $vect.mass * $vect.mass
+	return {"x": $x, "y": $y, "z": $z, "e": $e}
+};
+
+declare function AddPxPyPzE3($particleOne, $particleTwo, $particleThree) {
+	let $x := $particleOne.x + $particleTwo.x + $particleThree.x
+	let $y := $particleOne.y + $particleTwo.y + $particleThree.y
+	let $z := $particleOne.z + $particleTwo.z + $particleThree.z
+	let $e := $particleOne.e + $particleTwo.e + $particleThree.e
+	return {"x": $x, "y": $y, "z": $z, "e": $e}
+};
+
+declare function RhoZ2Eta($rho, $z) {
+	let $temp := $z div $rho
+	return log($temp + sqrt($temp * $temp + 1.0))
+};
+
+declare function PxPyPzE2PtEtaPhiM($particle) {
+	let $sqX := $particle.x * $particle.x
+	let $sqY := $particle.y * $particle.y
+	let $sqZ := $particle.z * $particle.z
+	let $sqE := $particle.e * $particle.e
+
+	let $pt := sqrt($sqX + $sqY)
+	let $eta := RhoZ2Eta($pt, $particle.z)
+	let $phi := if ($particle.x = 0.0 and $particle.y = 0.0)
+				then 0.0
+				else atan2($particle.y, $particle.x)
+	let $mass := sqrt($sqE - $sqZ - $sqY - $sqX)
+
+	return {"pt": $pt, "eta": $eta, "phi": $phi, "mass": $mass}
+};
+
+declare function TriJet($particleOne, $particleTwo, $particleThree) {
+	PxPyPzE2PtEtaPhiM(
+		AddPxPyPzE3(
+			PtEtaPhiM2PxPyPzE($particleOne),
+			PtEtaPhiM2PxPyPzE($particleTwo),
+			PtEtaPhiM2PxPyPzE($particleThree)
+			)
+		)
+};
+
+
 declare function RestructureData($data) {
   for $event in $data
   return RestructureEvent($event)
