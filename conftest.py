@@ -8,6 +8,8 @@ def pytest_addoption(parser):
                      help='Number of events taken from the input file. '
                           'This influences which reference file should be '
                           'taken.')
+    parser.addoption('-I', '--input-path', action='store',
+                     help='Path to input ROOT file.')
     parser.addoption('--rumble-cmd', action='store',
                      help='Path to spark-submit.')
     parser.addoption('--rumble-server', action='store',

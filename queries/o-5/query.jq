@@ -1,3 +1,5 @@
+declare variable $dataPath as anyURI external := anyURI("../../data/Run2012B_SingleMu.root");
+
 declare function buildHistogram($rawData, $histoConsts) {
   for $i in $rawData
   let $y := if ($i < $histoConsts.loBound) 
@@ -104,7 +106,6 @@ declare function computeInvariantMass($m1, $m2) {
 	2 * $m1.pt * $m2.pt * (cosh($m1.eta - $m2.eta) - cos($m1.phi - $m2.phi))
 };
 
-let $dataPath := "/home/dan/data/garbage/git/rumble-root-queries/rumble/data/Run2012B_SingleMu_small.parquet"
 let $histogram := histogramConsts(0, 2000, 100)
 
 

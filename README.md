@@ -50,6 +50,8 @@ custom options:
                         Folder name of query to run.
   -N NUM_EVENTS, --num-events=NUM_EVENTS
                         Number of events taken from the input file. This influences which reference file should be taken.
+  -I INPUT_PATH, --input-path=INPUT_PATH
+                        Path to input ROOT file.
   --rumble-cmd=RUMBLE_CMD
                         Path to spark-submit.
   --rumble-server=RUMBLE_SERVER

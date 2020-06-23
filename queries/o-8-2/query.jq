@@ -1,3 +1,5 @@
+declare variable $dataPath as anyURI external := anyURI("../../data/Run2012B_SingleMu.root");
+
 declare function buildHistogram($rawData, $histoConsts) {
   for $i in $rawData
   let $y :=     if ($i < $histoConsts.loBound) 
@@ -169,7 +171,6 @@ declare function ConcatLeptons($event) {
   return ($muons, $electrons)
 };
 
-let $dataPath := "/home/dan/data/garbage/git/rumble-root-queries/rumble/data/Run2012B_SingleMu_small.parquet"
 let $histogram := histogramConsts(15, 60, 100)
 
 
