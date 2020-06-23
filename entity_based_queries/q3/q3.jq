@@ -100,7 +100,7 @@ let $histogram := histogramConsts(15, 60, 100)
 
 
 let $filtered := (
-	for $i in RestructureDataParquet($dataPath).jets
+	for $i in RestructureDataParquet($dataPath).jets[]
 	where abs($i.eta) < 1
 	return $i.pt
 )
