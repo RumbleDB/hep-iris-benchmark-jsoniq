@@ -2,35 +2,74 @@
 
 This repository hosts the queries described [here](https://github.com/iris-hep/adl-benchmarks-index). The queries are written in the JSONiq programming language, and are meant to be executed on Rumble over Spark. The primary goal is to show that JSONiq can model complex queries with relative ease and high legibility. The secondary goal of this project refers to identifying limitations of JSONiq and Rumble, and finding solutions for them.
 
-## Rumble
+## Prerequisites
 
-Rumble is a framework used for executing JSONiq queries on top of Spark.
+* [Docker](https://docs.docker.com/engine/install/) or an installation of Rumble (see its [documentation](https://rumble.readthedocs.io/en/latest/Getting%20started/))
+* Python 3 with pip
 
-### Installation
+## Setup
 
-To install it, follow these [instructions](https://rumble.readthedocs.io/en/latest/Getting%20started/).
+1. Install the Python requirements:
+   ```bash
+   pip3 install -r requirements.txt
+   ```
+1. Configure `rumble.sh` or `start-server.sh`. The simplest is to copy the provided files that use docker:
+   ```bash
+   cp rumble.docker.sh rumble.sh
+   cp start-server.docker.sh start-server.sh
+   ```
+   Alternatively, copy the `*.local.sh` variants and modify them to contain the correct paths.
+1. If you want to use a long-running Rumble server, start it:
+   ```bash
+   ./start-server.sh
+   ```
 
-### The Data
+## Data
 
 Make sure you obtain a copy of the ROOT / parquet data in order to execute the queries (this can be downloaded from [here](https://polybox.ethz.ch/index.php/s/piULQwSvbjkwvJt)). Then make sure the query scripts point to the relevant data by changing the `dataPath` variable to the relevant value.
 
 It should be noted that for the purpose of these queries, I used the parquet file, as I would get an error when reading the ROOT version of the data.
 
-### Running Queries
+## Running Queries
 
-The scripts required to run queries with Rumble are located in the folder `rumble/scripts`:
+Run all queries on the full data set using `rumble.sh` from above with the following command:
 
-* `run_job.sh`: used to execute rumble scripts in normal execution mode. Make sure to change the system paths in this script, such that they fit your file structure.
-* `run_job_debug.sh`: used to execute rumble scripts in debug mode. Make sure to change the system paths in this script, such that they fit your file structure.
-* `add_to_path.sh`: adds the `rumble/scripts` folder to the `PATH` environment variable, such that the scripts above can be executed from anywhere. This should be executed with the `source` command.
+```bash
+./test_queries.py -v
+```
 
-Assuming `add_to_path.sh` was executed in the shell, one needs to navigate to a query file (e.g. `rumble/index_based_queries/q1`), and execute the following command: `run_job.sh <query_file_name>`.
+Run following to see more options
 
-### Query types
+```
+$ ./test_queries.py --help
+usage: test_queries.py [options] [file_or_dir] [file_or_dir] [...]
+
+...
+custom options:
+  -Q QUERY_ID, --query-id=QUERY_ID
+                        Folder name of query to run.
+  -N NUM_EVENTS, --num-events=NUM_EVENTS
+                        Number of events taken from the input file. This influences which reference file should be taken.
+  --rumble-cmd=RUMBLE_CMD
+                        Path to spark-submit.
+  --rumble-server=RUMBLE_SERVER
+                        Rumble server to connect to.
+  --freeze-result       Overwrite reference result.
+  --plot-histogram      Plot resulting histogram as PNG file.
+...
+```
+
+For example, to run all queries containing `o-` on the test data set with 150 events using a local server, do the following:
+
+```bash
+./test_queries.py -v -N 150 --rumble-server http://localhost:8001/jsoniq -k o-6-1
+```
+
+## Query Types
 
 The `rumble` directory hosts two sub-folders: `entity_based_queries` and `index_based_queries`. Both are supposed to implement the same set of queries. The difference between the two is that `entity_based_queries` employs a transformation of the data, such that each particle will be represented by a dictionary which encapsulates the particle's properties. That is to say, each particle will be represented by an object-like entity. The `index_based_queries` on the other hand use the available data directly and employ classical indexing-based traversals of the data. The former should technically be more readable, whereas the latter should be more efficient.
 
-### Known Execution Issues
+## Known Issues
 
 It may be the case that the following errors are encountered during the execution of the queries:
 
