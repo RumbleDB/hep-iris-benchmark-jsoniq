@@ -116,6 +116,7 @@ let $filtered := (
 		for $m1 in $i.muons[]
 			for $m2 in $i.muons[]
 			where $m1.idx < $m2.idx 
+			where $m1.charge != $m2.charge
 			let $invariantMass := computeInvariantMass($m1, $m2)
 			where 60 < $invariantMass and $invariantMass < 120
 			return $invariantMass 
