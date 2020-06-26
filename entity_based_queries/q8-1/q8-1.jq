@@ -53,6 +53,7 @@ declare function MakeElectrons($event) {
     "eta": $event.Electron_eta[[$i]],
     "phi": $event.Electron_phi[[$i]],
     "mass": $event.Electron_mass[[$i]],
+    "charge": $event.Electron_charge[[$i]],
     "pfRelIso03_all": $event.Electron_pfRelIso03_all[[$i]],
     "dxy": $event.Electron_dxy[[$i]],
     "dxyErr": $event.Electron_dxyErr[[$i]],
