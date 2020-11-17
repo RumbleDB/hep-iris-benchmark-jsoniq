@@ -5,30 +5,30 @@ declare variable $dataPath as anyURI external := anyURI("../../data/Run2012B_Sin
 let $histogram := hep:histogramConsts(0, 1, 100)
 
 let $filtered := (
-  for $i in parquet-file($dataPath)
-  where $i.nJet > 2
+  for $event in parquet-file($dataPath)
+  where $event.nJet > 2
   let $triplets := (
-    for $iIdx in (1 to (size($i.Jet_pt) - 2))
-    for $jIdx in (($iIdx + 1) to (size($i.Jet_pt) - 1))
-    for $kIdx in (($jIdx + 1) to size($i.Jet_pt))
-    let $particleOne := hep-i:MakeJetParticle($i, $iIdx)
-    let $particleTwo := hep-i:MakeJetParticle($i, $jIdx)
-    let $particleThree := hep-i:MakeJetParticle($i, $kIdx)
+    for $i in (1 to (size($event.Jet_pt) - 2))
+    for $j in (($i + 1) to (size($event.Jet_pt) - 1))
+    for $k in (($j + 1) to size($event.Jet_pt))
+    let $particleOne := hep-i:MakeJetParticle($event, $i)
+    let $particleTwo := hep-i:MakeJetParticle($event, $j)
+    let $particleThree := hep-i:MakeJetParticle($event, $k)
     let $triJet := hep:TriJet($particleOne, $particleTwo, $particleThree)
-    return {"idx": [$iIdx, $jIdx, $kIdx], "mass": abs(172.5 - $triJet.mass)}
+    return {"idx": [$i, $j, $k], "mass": abs(172.5 - $triJet.mass)}
   )
 
   let $minMass := min($triplets.mass)
 
   let $minTriplet := (
-    for $j in $triplets
-    where $j.mass = $minMass
-    return $j
+    for $triplet in $triplets
+    where $triplet.mass = $minMass
+    return $triplet
   )
 
   let $btags := (
-    for $j in $minTriplet.idx[]
-    return $i.Jet_btag[[$j]]
+    for $i in $minTriplet.idx[]
+    return $event.Jet_btag[[$i]]
   )
 
   return max($btags)

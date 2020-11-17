@@ -4,21 +4,21 @@ declare variable $dataPath as anyURI external := anyURI("../../data/Run2012B_Sin
 let $histogram := hep:histogramConsts(15, 200, 100)
 
 let $filtered := (
-  for $i in hep:RestructureDataParquet($dataPath)
+  for $event in hep:RestructureDataParquet($dataPath)
 
   let $filteredJets := (
-    for $jet in $i.jets[]
+    for $jet in $event.jets[]
     where $jet.pt > 30
 
     let $filteredElectrons := (
-      for $electron in $i.electrons[]
+      for $electron in $event.electrons[]
       where $electron.pt > 10 and hep:DeltaR($jet, $electron) < 40
       return $electron
     )
     where empty($filteredElectrons)
 
     let $filteredMuons := (
-      for $muon in $i.muons[]
+      for $muon in $event.muons[]
       where $muon.pt > 10 and hep:DeltaR($jet, $muon) < 40
       return $muon
     )

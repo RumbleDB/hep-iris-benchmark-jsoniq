@@ -10,8 +10,8 @@ declare function ConcatLeptons($event) {
   let $mass := ($event.Muon_mass[], $event.Electron_mass[])
   let $charge := ($event.Muon_charge[], $event.Electron_charge[])
 
-  let $m := for $i in (1 to size($event.Muon_pt)) return "m"
-  let $e := for $i in (1 to size($event.Electron_pt)) return "e"
+  let $m := for $m in (1 to size($event.Muon_pt)) return "m"
+  let $e := for $e in (1 to size($event.Electron_pt)) return "e"
 
   let $type := ($m, $e)
 
@@ -24,19 +24,19 @@ declare function ConcatLeptons($event) {
 let $histogram := hep:histogramConsts(15, 250, 100)
 
 let $filtered := (
-  for $i in parquet-file($dataPath)
-  where ($i.nMuon + $i.nElectron) > 2
-  let $leptons := ConcatLeptons($i)
+  for $event in parquet-file($dataPath)
+  where ($event.nMuon + $event.nElectron) > 2
+  let $leptons := ConcatLeptons($event)
 
   let $pairs := (
-    for $iIdx in (1 to (size($leptons.pt) - 1))
-    for $jIdx in (($iIdx + 1) to size($leptons.pt))
-    where $leptons.type[[$iIdx]] = $leptons.type[[$jIdx]] and
-      $leptons.charge[[$iIdx]] != $leptons.charge[[$jIdx]]
-    let $particleOne := hep-i:MakeParticle($leptons, $iIdx)
-    let $particleTwo := hep-i:MakeParticle($leptons, $jIdx)
+    for $i in (1 to (size($leptons.pt) - 1))
+    for $j in (($i + 1) to size($leptons.pt))
+    where $leptons.type[[$i]] = $leptons.type[[$j]] and
+      $leptons.charge[[$i]] != $leptons.charge[[$j]]
+    let $particleOne := hep-i:MakeParticle($leptons, $i)
+    let $particleTwo := hep-i:MakeParticle($leptons, $j)
     return {
-      "i": $iIdx, "j": $jIdx,
+      "i": $i, "j": $j,
       "mass": abs(91.2 - hep:AddPtEtaPhiM2($particleOne, $particleTwo).mass)
     }
   )
@@ -44,23 +44,23 @@ let $filtered := (
 
   let $minMass := min($pairs.mass)
   let $minPair := (
-    for $j in $pairs
-    where $j.mass = $minMass
-    return $j
+    for $pair in $pairs
+    where $pair.mass = $minMass
+    return $pair
   )
 
   let $maxOtherPt := max(
-    for $j in (1 to size($leptons.pt))
-    where $j != $minPair.i and $j != $minPair.j
-    return $leptons.pt[[$j]]
+    for $i in (1 to size($leptons.pt))
+    where $i != $minPair.i and $i != $minPair.j
+    return $leptons.pt[[$i]]
   )
 
   let $otherLeptonMass := (
-    for $j in (1 to size($leptons.pt))
-    where $j != $minPair.i and $j != $minPair.j and
-      $leptons.pt[[$j]] = $maxOtherPt
-    let $transverseMass := 2 * $i.MET_pt * $maxOtherPt *
-      (1.0 - cos(hep:DeltaPhi($i.MET_phi, $leptons.phi[[$j]])))
+    for $i in (1 to size($leptons.pt))
+    where $i != $minPair.i and $i != $minPair.j and
+      $leptons.pt[[$i]] = $maxOtherPt
+    let $transverseMass := 2 * $event.MET_pt * $maxOtherPt *
+      (1.0 - cos(hep:DeltaPhi($event.MET_phi, $leptons.phi[[$i]])))
     return $transverseMass
   )
 

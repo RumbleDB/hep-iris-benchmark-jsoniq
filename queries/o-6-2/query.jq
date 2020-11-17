@@ -4,19 +4,19 @@ declare variable $dataPath as anyURI external := anyURI("../../data/Run2012B_Sin
 let $histogram := hep:histogramConsts(0, 1, 100)
 
 let $filtered := (
-  for $i in hep:RestructureDataParquet($dataPath)
-  where $i.nJet > 2
+  for $event in hep:RestructureDataParquet($dataPath)
+  where $event.nJet > 2
 
   let $maxBtag := (
-    for $j1 in $i.jets[]
-    for $j2 in $i.jets[]
-    for $j3 in $i.jets[]
-    where $j1.idx < $j2.idx and $j2.idx < $j3.idx
-    let $triJetMass := abs(172.5 - hep:TriJet($j1, $j2, $j3).mass)
+    for $jet1 in $event.jets[]
+    for $jet2 in $event.jets[]
+    for $jet3 in $event.jets[]
+    where $jet1.idx < $jet2.idx and $jet2.idx < $jet3.idx
+    let $triJetMass := abs(172.5 - hep:TriJet($jet1, $jet2, $jet3).mass)
     order by $triJetMass
     count $c
     where $c <= 1
-    return max(($j1.btag, $j2.btag, $j3.btag))
+    return max(($jet1.btag, $jet2.btag, $jet3.btag))
   )
 
   return $maxBtag

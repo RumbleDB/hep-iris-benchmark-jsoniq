@@ -5,36 +5,36 @@ declare variable $dataPath as anyURI external := anyURI("../../data/Run2012B_Sin
 let $histogram := hep:histogramConsts(15, 200, 100)
 
 let $filtered := (
-  for $i in parquet-file($dataPath)
+  for $event in parquet-file($dataPath)
   let $filteredJets := (
-    for $jetIdx in (1 to size($i.Jet_pt))
-    where $i.Jet_pt[[$jetIdx]] > 30
+    for $jetIdx in (1 to size($event.Jet_pt))
+    where $event.Jet_pt[[$jetIdx]] > 30
 
     let $filteredElectrons := (
-      for $electronIdx in (1 to size($i.Electron_pt))
+      for $electronIdx in (1 to size($event.Electron_pt))
       let $deltaR := hep-i:DeltaR(
-        $i.Jet_phi[[$jetIdx]],
-        $i.Electron_phi[[$electronIdx]],
-        $i.Jet_eta[[$jetIdx]],
-        $i.Electron_eta[[$electronIdx]])
-      where $i.Electron_pt[[$electronIdx]] > 10 and $deltaR < 40
+        $event.Jet_phi[[$jetIdx]],
+        $event.Electron_phi[[$electronIdx]],
+        $event.Jet_eta[[$jetIdx]],
+        $event.Electron_eta[[$electronIdx]])
+      where $event.Electron_pt[[$electronIdx]] > 10 and $deltaR < 40
       return $electronIdx
     )
     where empty($filteredElectrons)
 
     let $filteredMuons := (
-      for $muonIdx in (1 to size($i.Muon_pt))
+      for $muonIdx in (1 to size($event.Muon_pt))
       let $deltaR := hep-i:DeltaR(
-        $i.Jet_phi[[$jetIdx]],
-        $i.Muon_phi[[$muonIdx]],
-        $i.Jet_eta[[$jetIdx]],
-        $i.Muon_eta[[$muonIdx]])
-      where $i.Muon_pt[[$muonIdx]] > 10 and $deltaR < 40
+        $event.Jet_phi[[$jetIdx]],
+        $event.Muon_phi[[$muonIdx]],
+        $event.Jet_eta[[$jetIdx]],
+        $event.Muon_eta[[$muonIdx]])
+      where $event.Muon_pt[[$muonIdx]] > 10 and $deltaR < 40
       return $muonIdx
     )
     where empty($filteredMuons)
 
-    return $i.Jet_pt[[$jetIdx]]
+    return $event.Jet_pt[[$jetIdx]]
   )
   where exists($filteredJets)
 

@@ -4,10 +4,10 @@ declare variable $dataPath as anyURI external := anyURI("../../data/Run2012B_Sin
 let $histogram := hep:histogramConsts(15, 60, 100)
 
 let $filtered := (
-  for $i in parquet-file($dataPath)
-  for $j in (1 to size($i.Jet_pt))
-  where abs($i.Jet_eta[[$j]]) < 1
-  return $i.Jet_pt[[$j]]
+  for $event in parquet-file($dataPath)
+  for $i in (1 to size($event.Jet_pt))
+  where abs($event.Jet_eta[[$i]]) < 1
+  return $event.Jet_pt[[$i]]
 )
 
 return hep:buildHistogram($filtered, $histogram)
