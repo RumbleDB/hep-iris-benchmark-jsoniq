@@ -1,29 +1,13 @@
 import module namespace hep = "../common/hep.jq";
-import module namespace hep-i = "../common/hep-i.jq";
+import module namespace i-6 = "../i-6/common.jq";
 declare variable $dataPath as anyURI external := anyURI("../../data/Run2012B_SingleMu.root");
 
-let $filtered := (
+let $filtered :=
   for $event in parquet-file($dataPath)
   where $event.nJet > 2
+  let $min-triplet-idxs := i-6:find-min-triplet-idx($event)
 
-  let $min-triplet-idxs := (
-    for $i in (1 to (size($event.Jet_pt) - 2))
-    for $j in (($i + 1) to (size($event.Jet_pt) - 1))
-    for $k in (($j + 1) to size($event.Jet_pt))
-    let $particleOne := hep-i:MakeJetParticle($event, $i)
-    let $particleTwo := hep-i:MakeJetParticle($event, $j)
-    let $particleThree := hep-i:MakeJetParticle($event, $k)
-    let $triJet := hep:TriJet($particleOne, $particleTwo, $particleThree)
-    order by abs(172.5 - $triJet.mass) ascending
-    return [$i, $j, $k]
-  )[1]
-
-  let $pT := (
-    for $i in $min-triplet-idxs[]
-    return $event.Jet_pt[[$i]]
-  )
-
-  return $pT
-)
+  for $i in $min-triplet-idxs[]
+  return $event.Jet_pt[[$i]]
 
 return hep:histogram($filtered, 15, 40, 100)

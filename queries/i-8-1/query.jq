@@ -1,5 +1,6 @@
 import module namespace hep = "../common/hep.jq";
 import module namespace hep-i = "../common/hep-i.jq";
+import module namespace i-8 = "../i-8/common.jq";
 declare variable $dataPath as anyURI external := anyURI("../../data/Run2012B_SingleMu.root");
 
 let $filtered := (
@@ -7,17 +8,7 @@ let $filtered := (
   where ($event.nMuon + $event.nElectron) > 2
   let $leptons := hep-i:ConcatLeptons($event)
 
-  let $closest-lepton-pair := (
-    for $i in (1 to (size($leptons.pt) - 1))
-    for $j in (($i + 1) to size($leptons.pt))
-    where $leptons.type[[$i]] = $leptons.type[[$j]] and
-      $leptons.charge[[$i]] != $leptons.charge[[$j]]
-    let $particleOne := hep-i:MakeParticle($leptons, $i)
-    let $particleTwo := hep-i:MakeParticle($leptons, $j)
-    let $mass := hep:AddPtEtaPhiM2($particleOne, $particleTwo).mass
-    order by abs(91.2 - $mass) ascending
-    return {"i": $i, "j": $j}
-  )[1]
+  let $closest-lepton-pair := i-8:find-closest-lepton-pair($leptons)
   where exists($closest-lepton-pair)
 
   let $leading-other-lepton-idx := (
