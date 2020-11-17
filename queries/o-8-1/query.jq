@@ -17,35 +17,28 @@ declare function ConcatLeptons($event) {
 
 let $filtered := (
   for $event in hep:RestructureDataParquet($dataPath)
-  let $leptonSize := integer($event.nMuon + $event.nElectron)
-  where $leptonSize > 2
+  where integer($event.nMuon + $event.nElectron) > 2
 
   let $leptons := ConcatLeptons($event)
-  let $bestPair := (
-    for $i in (1 to ($leptonSize - 1))
-    for $j in (($i + 1) to $leptonSize)
-    let $lepton1 := $leptons[$i]
-    let $lepton2 := $leptons[$j]
+  let $closest-lepton-pair := (
+    for $lepton1 at $i in $leptons
+    for $lepton2 at $j in $leptons
+    where $i < $j
     where $lepton1.type = $lepton2.type and $lepton1.charge != $lepton2.charge
-    let $mass := abs(91.2 - hep:AddPtEtaPhiM2($lepton1, $lepton2).mass)
-    order by $mass
-    count $c
-    where $c <= 1
+    order by abs(91.2 - hep:AddPtEtaPhiM2($lepton1, $lepton2).mass) ascending
     return {"i": $i, "j": $j}
-  )
-  where exists($bestPair)
+  )[1]
+  where exists($closest-lepton-pair)
 
-  let $otherL := (
-    for $lepton in $leptons
-    count $c
-    where $c != $bestPair.i and $c != $bestPair.j
+  let $other-leption := (
+    for $lepton at $i in $leptons
+    where $i != $closest-lepton-pair.i and $i != $closest-lepton-pair.j
     order by $lepton.pt descending
-    count $d
-    where $d <= 1
     return $lepton
-  )
+  )[1]
 
-  return 2 * $event.MET_pt * $otherL.pt * (1.0 - cos(hep:DeltaPhi($event.MET_phi, $otherL.phi)))
+  return 2 * $event.MET_pt * $other-leption.pt *
+    (1.0 - cos(hep:DeltaPhi($event.MET_phi, $other-leption.phi)))
 )
 
 return hep:histogram($filtered, 15, 250, 100)
