@@ -5,12 +5,7 @@ let $histogram := hep:histogramConsts(0, 2000, 100)
 
 let $filtered := (
   for $i in parquet-file($dataPath)
-  let $subCount := sum(
-    for $j in $i.Jet_pt[]
-    return if ($j > 40)
-           then 1
-           else 0
-  )
+  let $subCount := count($i.Jet_pt[][$$ > 40])
   where $subCount > 1
   return $i.MET_sumet
 )

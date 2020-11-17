@@ -30,16 +30,15 @@ let $filtered := (
 
   let $pairs := (
     for $iIdx in (1 to (size($leptons.pt) - 1))
-    return
-      for $jIdx in (($iIdx + 1) to size($leptons.pt))
-      where $leptons.type[[$iIdx]] = $leptons.type[[$jIdx]] and
-        $leptons.charge[[$iIdx]] != $leptons.charge[[$jIdx]]
-      let $particleOne := hep-i:MakeParticle($leptons, $iIdx)
-      let $particleTwo := hep-i:MakeParticle($leptons, $jIdx)
-      return {
-        "i": $iIdx, "j": $jIdx,
-        "mass": abs(91.2 - hep:AddPtEtaPhiM2($particleOne, $particleTwo).mass)
-      }
+    for $jIdx in (($iIdx + 1) to size($leptons.pt))
+    where $leptons.type[[$iIdx]] = $leptons.type[[$jIdx]] and
+      $leptons.charge[[$iIdx]] != $leptons.charge[[$jIdx]]
+    let $particleOne := hep-i:MakeParticle($leptons, $iIdx)
+    let $particleTwo := hep-i:MakeParticle($leptons, $jIdx)
+    return {
+      "i": $iIdx, "j": $jIdx,
+      "mass": abs(91.2 - hep:AddPtEtaPhiM2($particleOne, $particleTwo).mass)
+    }
   )
   where exists($pairs)
 

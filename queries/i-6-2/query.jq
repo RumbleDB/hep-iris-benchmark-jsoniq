@@ -9,15 +9,13 @@ let $filtered := (
   where $i.nJet > 2
   let $triplets := (
     for $iIdx in (1 to (size($i.Jet_pt) - 2))
-    return
-      for $jIdx in (($iIdx + 1) to (size($i.Jet_pt) - 1))
-      return
-        for $kIdx in (($jIdx + 1) to size($i.Jet_pt))
-        let $particleOne := hep-i:MakeJetParticle($i, $iIdx)
-        let $particleTwo := hep-i:MakeJetParticle($i, $jIdx)
-        let $particleThree := hep-i:MakeJetParticle($i, $kIdx)
-        let $triJet := hep:TriJet($particleOne, $particleTwo, $particleThree)
-        return {"idx": [$iIdx, $jIdx, $kIdx], "mass": abs(172.5 - $triJet.mass)}
+    for $jIdx in (($iIdx + 1) to (size($i.Jet_pt) - 1))
+    for $kIdx in (($jIdx + 1) to size($i.Jet_pt))
+    let $particleOne := hep-i:MakeJetParticle($i, $iIdx)
+    let $particleTwo := hep-i:MakeJetParticle($i, $jIdx)
+    let $particleThree := hep-i:MakeJetParticle($i, $kIdx)
+    let $triJet := hep:TriJet($particleOne, $particleTwo, $particleThree)
+    return {"idx": [$iIdx, $jIdx, $kIdx], "mass": abs(172.5 - $triJet.mass)}
   )
 
   let $minMass := min($triplets.mass)
