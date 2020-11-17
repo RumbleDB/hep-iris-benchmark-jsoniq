@@ -21,8 +21,6 @@ declare function ConcatLeptons($event) {
   }
 };
 
-let $histogram := hep:histogramConsts(15, 60, 100)
-
 let $filtered := (
   for $event in parquet-file($dataPath)
   where ($event.nMuon + $event.nElectron) > 2
@@ -58,4 +56,4 @@ let $filtered := (
   return $maxOtherPt
 )
 
-return hep:buildHistogram($filtered, $histogram)
+return hep:histogram($filtered, 15, 60, 100)

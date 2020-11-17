@@ -15,8 +15,6 @@ declare function ConcatLeptons($event) {
   return ($muons, $electrons)
 };
 
-let $histogram := hep:histogramConsts(15, 250, 100)
-
 let $filtered := (
   for $event in hep:RestructureDataParquet($dataPath)
   let $leptonSize := integer($event.nMuon + $event.nElectron)
@@ -50,4 +48,4 @@ let $filtered := (
   return 2 * $event.MET_pt * $otherL.pt * (1.0 - cos(hep:DeltaPhi($event.MET_phi, $otherL.phi)))
 )
 
-return hep:buildHistogram($filtered, $histogram)
+return hep:histogram($filtered, 15, 250, 100)

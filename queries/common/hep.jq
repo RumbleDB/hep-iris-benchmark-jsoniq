@@ -1,36 +1,24 @@
 module namespace hep = "hep.jq";
 import module namespace math = "../common/math.jq";
 
-declare function hep:buildHistogram($rawData, $histoConsts) {
-  for $i in $rawData
-  let $y := if ($i < $histoConsts.loBound)
-            then $histoConsts.loConst
-            else
-              if ($i < $histoConsts.hiBound)
-              then round(($i - $histoConsts.center) div $histoConsts.width)
-              else $histoConsts.hiConst
-  let $x := $y * $histoConsts.width + $histoConsts.center
-  group by $x
-  order by $x
-  return {"x": $x, "y": count($y)}
-};
+declare function hep:histogram($values, $lo, $hi, $num-bins) {
+  let $width := ($hi - $lo) div $num-bins
+  let $half-width := $width div 2
 
-declare function hep:histogramConsts($loBound, $hiBound, $binCount) {
-  let $bucketWidth := ($hiBound - $loBound) div $binCount
-  let $bucketCenter := $bucketWidth div 2
+  let $underflow := round(($lo - $half-width) div $width)
+  let $overflow := round(($hi - $half-width) div $width)
 
-  let $loConst := round(($loBound - $bucketCenter) div $bucketWidth)
-  let $hiConst := round(($hiBound - $bucketCenter) div $bucketWidth)
+  for $v in $values
+  let $bucket-idx :=
+    if ($v < $lo) then $underflow
+    else
+      if ($v > $hi) then $overflow
+      else round(($v - $half-width) div $width)
+  let $center := $bucket-idx * $width + $half-width
 
-  return {
-    "bins": $binCount,
-    "width": $bucketWidth,
-    "center": $bucketCenter,
-    "loConst": $loConst,
-    "hiConst": $hiConst,
-    "loBound": $loBound,
-    "hiBound": $hiBound
-  }
+  group by $center
+  order by $center
+  return {"x": $center, "y": count($v)}
 };
 
 declare function hep:MakeMuons($event) {

@@ -2,8 +2,6 @@ import module namespace hep = "../common/hep.jq";
 import module namespace hep-i = "../common/hep-i.jq";
 declare variable $dataPath as anyURI external := anyURI("../../data/Run2012B_SingleMu.root");
 
-let $histogram := hep:histogramConsts(0, 2000, 100)
-
 let $filtered := (
   for $event in parquet-file($dataPath)
   where $event.nMuon > 1
@@ -25,4 +23,4 @@ let $filtered := (
   return $event.MET_sumet
 )
 
-return hep:buildHistogram($filtered, $histogram)
+return hep:histogram($filtered, 0, 2000, 100)

@@ -2,8 +2,6 @@ import module namespace hep = "../common/hep.jq";
 import module namespace hep-i = "../common/hep-i.jq";
 declare variable $dataPath as anyURI external := anyURI("../../data/Run2012B_SingleMu.root");
 
-let $histogram := hep:histogramConsts(15, 40, 100)
-
 let $filtered := (
   for $event in parquet-file($dataPath)
   where $event.nJet > 2
@@ -34,4 +32,4 @@ let $filtered := (
   return $pT
 )
 
-return hep:buildHistogram($filtered, $histogram)
+return hep:histogram($filtered, 15, 40, 100)
