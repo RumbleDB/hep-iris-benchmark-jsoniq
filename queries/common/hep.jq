@@ -24,7 +24,6 @@ declare function hep:histogram($values, $lo, $hi, $num-bins) {
 declare function hep:MakeMuons($event) {
   for $i in (1 to size($event.Muon_pt))
   return {
-    "idx": $i,
     "pt": $event.Muon_pt[[$i]],
     "eta": $event.Muon_eta[[$i]],
     "phi": $event.Muon_phi[[$i]],
@@ -46,7 +45,6 @@ declare function hep:MakeMuons($event) {
 declare function hep:MakeElectrons($event) {
   for $i in (1 to size($event.Electron_pt))
   return {
-    "idx": $i,
     "pt": $event.Electron_pt[[$i]],
     "eta": $event.Electron_eta[[$i]],
     "phi": $event.Electron_phi[[$i]],
@@ -67,7 +65,6 @@ declare function hep:MakeElectrons($event) {
 declare function hep:MakeJet($event) {
   for $i in (1 to size($event.Jet_pt))
   return {
-    "idx": $i,
     "pt": $event.Jet_pt[[$i]],
     "eta": $event.Jet_eta[[$i]],
     "phi": $event.Jet_phi[[$i]],
