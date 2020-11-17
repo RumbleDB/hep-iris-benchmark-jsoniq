@@ -2,23 +2,10 @@ import module namespace hep = "../common/hep.jq";
 import module namespace hep-i = "../common/hep-i.jq";
 declare variable $dataPath as anyURI external := anyURI("../../data/Run2012B_SingleMu.root");
 
-declare function ConcatLeptons($event) {
-  {
-    "nLepton": $event.nMuon + $event.nElectron,
-    "type": [for $m in (1 to size($event.Muon_pt)) return "m",
-             for $e in (1 to size($event.Electron_pt)) return "e"],
-    "pt":     [$event.Muon_pt[],     $event.Electron_pt[]],
-    "eta":    [$event.Muon_eta[],    $event.Electron_eta[]],
-    "phi":    [$event.Muon_phi[],    $event.Electron_phi[]],
-    "mass":   [$event.Muon_mass[],   $event.Electron_mass[]],
-    "charge": [$event.Muon_charge[], $event.Electron_charge[]]
-  }
-};
-
 let $filtered := (
   for $event in parquet-file($dataPath)
   where ($event.nMuon + $event.nElectron) > 2
-  let $leptons := ConcatLeptons($event)
+  let $leptons := hep-i:ConcatLeptons($event)
 
   let $closest-lepton-pair := (
     for $i in (1 to (size($leptons.pt) - 1))

@@ -178,3 +178,17 @@ declare function hep:DeltaR($p1, $p2) {
   let $deltaPhi := hep:DeltaPhi($p1.phi, $p2.phi)
   return sqrt($deltaPhi * $deltaPhi + $deltaEta * $deltaEta)
 };
+
+declare function hep:ConcatLeptons($event) {
+  let $muons := (
+    for $muon in $event.muons[]
+    return {| $muon, {"type": "m"}  |}
+  )
+
+  let $electrons := (
+    for $electron in $event.electrons[]
+    return {| $electron, {"type": "e"}  |}
+  )
+
+  return ($muons, $electrons)
+};

@@ -1,25 +1,11 @@
 import module namespace hep = "../common/hep.jq";
 declare variable $dataPath as anyURI external := anyURI("../../data/Run2012B_SingleMu.root");
 
-declare function ConcatLeptons($event) {
-  let $muons := (
-    for $muon in $event.muons[]
-    return {| $muon, {"type": "m"}  |}
-  )
-
-  let $electrons := (
-    for $electron in $event.electrons[]
-    return {| $electron, {"type": "e"}  |}
-  )
-
-  return ($muons, $electrons)
-};
-
 let $filtered := (
   for $event in hep:RestructureDataParquet($dataPath)
   where integer($event.nMuon + $event.nElectron) > 2
 
-  let $leptons := ConcatLeptons($event)
+  let $leptons := hep:ConcatLeptons($event)
   let $closest-lepton-pair := (
     for $lepton1 at $i in $leptons
     for $lepton2 at $j in $leptons

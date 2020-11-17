@@ -33,3 +33,16 @@ declare function hep-i:DeltaR($phi1, $phi2, $eta1, $eta2) {
   let $deltaPhi := hep:DeltaPhi($phi1, $phi2)
   return sqrt($deltaPhi * $deltaPhi + $deltaEta * $deltaEta)
 };
+
+declare function hep-i:ConcatLeptons($event) {
+  {
+    "nLepton": $event.nMuon + $event.nElectron,
+    "type": [for $m in (1 to size($event.Muon_pt)) return "m",
+             for $e in (1 to size($event.Electron_pt)) return "e"],
+    "pt":     [$event.Muon_pt[],     $event.Electron_pt[]],
+    "eta":    [$event.Muon_eta[],    $event.Electron_eta[]],
+    "phi":    [$event.Muon_phi[],    $event.Electron_phi[]],
+    "mass":   [$event.Muon_mass[],   $event.Electron_mass[]],
+    "charge": [$event.Muon_charge[], $event.Electron_charge[]]
+  }
+};
