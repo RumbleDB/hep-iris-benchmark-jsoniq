@@ -26,9 +26,37 @@ This repository hosts the queries described [here](https://github.com/iris-hep/a
 
 ## Data
 
-Make sure you obtain a copy of the ROOT / parquet data in order to execute the queries (this can be downloaded from [here](https://polybox.ethz.ch/index.php/s/piULQwSvbjkwvJt)). Then make sure the query scripts point to the relevant data by changing the `dataPath` variable to the relevant value.
+The benchmark defines the queries against the following data set:
 
-It should be noted that for the purpose of these queries, I used the parquet file, as I would get an error when reading the ROOT version of the data.
+```
+root://eospublic.cern.ch//eos/root-eos/benchmark/Run2012B_SingleMu.root
+```
+
+For getting started quickly, we provide two samples of the file converted to Parquet are included in [`data/`](/data/). Since Rumble supports [reading ROOT files directly](https://rumble.readthedocs.io/en/latest/Input/#root), doing so only requires a minimal change in the query implementations.
+
+### Local Processing
+
+Instead of processing the file in-place through the `root://` protocol, you may download it to local storage using [`xrdcp`](https://linux.die.net/man/1/xrdcp) (which you can install by [installing the ROOT framework](https://root.cern/install/)).
+
+### Extracting a Sample
+
+In order to extract a samle for faster processing, you can use `rooteventselector` and its `-f` and `-l` flags (which is part of the ROOT framework as well).
+
+### Converting to Parquet
+
+You may convert the ROOT files into Parquet (or other formats) using `tools/root2parquet.py`. This downloads the specified package from the internet, so if you are behind a proxy, follow [this](https://stackoverflow.com/a/36676963).
+
+```bash
+spark-submit \
+    --packages edu.vanderbilt.accre:laurelin:1.1.1 \
+    tools/root2parquet.py \
+        -i data/Run2012B_SingleMu.root \
+        -0 data/Run2012B_SingleMu.parquet
+```
+
+### Naming Convention for this Implementation
+
+`test_queries.py` looks for the input files in `data/` with names of the form `Run2012B_SingleMu{suffix}.parquet`, where `{suffix}` is empty for the full data set and `-{num_events}` for a sample of `{num_events}`. It also looks for reference results in `queries/{query_name}/ref{suffix}.csv` with the same `{suffix}`. It also looks for reference results in `queries/{query_name}/ref{suffix}.csv` with the same `{suffix}`..
 
 ## Running Queries
 
