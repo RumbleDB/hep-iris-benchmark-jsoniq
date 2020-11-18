@@ -1,12 +1,12 @@
 import module namespace hep = "../common/hep.jq";
 import module namespace hep-i = "../common/hep-i.jq";
 import module namespace i-8 = "../i-8/common.jq";
-declare variable $dataPath as anyURI external := anyURI("../../data/Run2012B_SingleMu.root");
+declare variable $input-path as anyURI external := anyURI("../../data/Run2012B_SingleMu.root");
 
 let $filtered := (
-  for $event in parquet-file($dataPath)
+  for $event in parquet-file($input-path)
   where ($event.nMuon + $event.nElectron) > 2
-  let $leptons := hep-i:ConcatLeptons($event)
+  let $leptons := hep-i:concat-leptons($event)
 
   let $closest-lepton-pair := i-8:find-closest-lepton-pair($leptons)
   where exists($closest-lepton-pair)

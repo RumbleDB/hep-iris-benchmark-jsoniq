@@ -99,7 +99,7 @@ def test_query(query_id, pytestconfig, rumble):
     input_path = input_path or \
         join(root_dir, 'data',
              'Run2012B_SingleMu{}.parquet'.format(num_events))
-    variables['dataPath'] = input_path
+    variables['input-path'] = input_path
 
     # Run query and read result
     start_timestamp = time.time()

@@ -1,25 +1,25 @@
 import module namespace hep = "../common/hep.jq";
-declare variable $dataPath as anyURI external := anyURI("../../data/Run2012B_SingleMu.root");
+declare variable $input-path as anyURI external := anyURI("../../data/Run2012B_SingleMu.root");
 
 let $filtered := (
-  for $event in hep:RestructureDataParquet($dataPath)
+  for $event in hep:restructure-data-parquet($input-path)
 
-  let $filteredJets := (
+  let $filtered-jets := (
     for $jet in $event.jets[]
     where $jet.pt > 30
 
-    let $leptons := hep:ConcatLeptons($event)
+    let $leptons := hep:concat-leptons($event)
     where empty(
       for $lepton in $leptons
-      where $lepton.pt > 10 and hep:DeltaR($jet, $lepton) < 40
+      where $lepton.pt > 10 and hep:delta-R($jet, $lepton) < 40
       return {}
     )
 
     return $jet
   )
 
-  where exists($filteredJets)
-  return sum($filteredJets.pt)
+  where exists($filtered-jets)
+  return sum($filtered-jets.pt)
 )
 
 return hep:histogram($filtered, 15, 200, 100)

@@ -21,7 +21,7 @@ declare function hep:histogram($values, $lo, $hi, $num-bins) {
   return {"x": $center, "y": count($v)}
 };
 
-declare function hep:MakeMuons($event) {
+declare function hep:make-muons($event) {
   for $i in (1 to size($event.Muon_pt))
   return {
     "pt": $event.Muon_pt[[$i]],
@@ -42,7 +42,7 @@ declare function hep:MakeMuons($event) {
   }
 };
 
-declare function hep:MakeElectrons($event) {
+declare function hep:make-electrons($event) {
   for $i in (1 to size($event.Electron_pt))
   return {
     "pt": $event.Electron_pt[[$i]],
@@ -62,7 +62,7 @@ declare function hep:MakeElectrons($event) {
   }
 };
 
-declare function hep:MakeJet($event) {
+declare function hep:make-jets($event) {
   for $i in (1 to size($event.Jet_pt))
   return {
     "pt": $event.Jet_pt[[$i]],
@@ -74,34 +74,34 @@ declare function hep:MakeJet($event) {
   }
 };
 
-declare function hep:RestructureEvent($event) {
-  let $muonList := hep:MakeMuons($event)
-  let $electronList := hep:MakeElectrons($event)
-  let $jetList := hep:MakeJet($event)
+declare function hep:restructure-event($event) {
+  let $muons := hep:make-muons($event)
+  let $electrons := hep:make-electrons($event)
+  let $jets := hep:make-jets($event)
   return {| $event,
            {
-              "muons": [ $muonList ],
-              "electrons": [ $electronList ],
-              "jets": [ $jetList ]
+              "muons": [ $muons ],
+              "electrons": [ $electrons ],
+              "jets": [ $jets ]
            }
          |}
 };
 
-declare function hep:RestructureData($data) {
+declare function hep:restructure-data($data) {
   for $event in $data
-  return hep:RestructureEvent($event)
+  return hep:restructure-event($event)
 };
 
-declare function hep:RestructureDataParquet($path) {
+declare function hep:restructure-data-parquet($path) {
   for $event in parquet-file($path)
-  return hep:RestructureEvent($event)
+  return hep:restructure-event($event)
 };
 
-declare function hep:computeInvariantMass($m1, $m2) {
+declare function hep:compute-invariant-mass($m1, $m2) {
   2 * $m1.pt * $m2.pt * (math:cosh($m1.eta - $m2.eta) - cos($m1.phi - $m2.phi))
 };
 
-declare function hep:PtEtaPhiM2PxPyPzE($vect) {
+declare function hep:PtEtaPhiM-to-PxPyPzE($vect) {
   let $x := $vect.pt * cos($vect.phi)
   let $y := $vect.pt * sin($vect.phi)
   let $z := $vect.pt * math:sinh($vect.eta)
@@ -110,73 +110,73 @@ declare function hep:PtEtaPhiM2PxPyPzE($vect) {
   return {"x": $x, "y": $y, "z": $z, "e": $e}
 };
 
-declare function hep:AddPxPyPzE2($particleOne, $particleTwo) {
-  let $x := $particleOne.x + $particleTwo.x
-  let $y := $particleOne.y + $particleTwo.y
-  let $z := $particleOne.z + $particleTwo.z
-  let $e := $particleOne.e + $particleTwo.e
+declare function hep:add-PxPyPzE($particle1, $particle2) {
+  let $x := $particle1.x + $particle2.x
+  let $y := $particle1.y + $particle2.y
+  let $z := $particle1.z + $particle2.z
+  let $e := $particle1.e + $particle2.e
   return {"x": $x, "y": $y, "z": $z, "e": $e}
 };
 
-declare function hep:AddPxPyPzE3($particleOne, $particleTwo, $particleThree) {
-  let $x := $particleOne.x + $particleTwo.x + $particleThree.x
-  let $y := $particleOne.y + $particleTwo.y + $particleThree.y
-  let $z := $particleOne.z + $particleTwo.z + $particleThree.z
-  let $e := $particleOne.e + $particleTwo.e + $particleThree.e
+declare function hep:add-PxPyPzE($particle1, $particle2, $particle3) {
+  let $x := $particle1.x + $particle2.x + $particle3.x
+  let $y := $particle1.y + $particle2.y + $particle3.y
+  let $z := $particle1.z + $particle2.z + $particle3.z
+  let $e := $particle1.e + $particle2.e + $particle3.e
   return {"x": $x, "y": $y, "z": $z, "e": $e}
 };
 
-declare function hep:RhoZ2Eta($rho, $z) {
+declare function hep:RhoZ-to-eta($rho, $z) {
   let $temp := $z div $rho
   return log($temp + sqrt($temp * $temp + 1.0))
 };
 
-declare function hep:PxPyPzE2PtEtaPhiM($particle) {
-  let $sqX := $particle.x * $particle.x
-  let $sqY := $particle.y * $particle.y
-  let $sqZ := $particle.z * $particle.z
-  let $sqE := $particle.e * $particle.e
+declare function hep:PxPyPzE-to-PtEtaPhiM($particle) {
+  let $x2 := $particle.x * $particle.x
+  let $y2 := $particle.y * $particle.y
+  let $z2 := $particle.z * $particle.z
+  let $e2 := $particle.e * $particle.e
 
-  let $pt := sqrt($sqX + $sqY)
-  let $eta := hep:RhoZ2Eta($pt, $particle.z)
+  let $pt := sqrt($x2 + $y2)
+  let $eta := hep:RhoZ-to-eta($pt, $particle.z)
   let $phi := if ($particle.x = 0.0 and $particle.y = 0.0)
         then 0.0
         else atan2($particle.y, $particle.x)
-  let $mass := sqrt($sqE - $sqZ - $sqY - $sqX)
+  let $mass := sqrt($e2 - $z2 - $y2 - $x2)
 
   return {"pt": $pt, "eta": $eta, "phi": $phi, "mass": $mass}
 };
 
-declare function hep:TriJet($particleOne, $particleTwo, $particleThree) {
-  hep:PxPyPzE2PtEtaPhiM(
-    hep:AddPxPyPzE3(
-      hep:PtEtaPhiM2PxPyPzE($particleOne),
-      hep:PtEtaPhiM2PxPyPzE($particleTwo),
-      hep:PtEtaPhiM2PxPyPzE($particleThree)
+declare function hep:make-tri-jet($particle1, $particle2, $particle3) {
+  hep:PxPyPzE-to-PtEtaPhiM(
+    hep:add-PxPyPzE(
+      hep:PtEtaPhiM-to-PxPyPzE($particle1),
+      hep:PtEtaPhiM-to-PxPyPzE($particle2),
+      hep:PtEtaPhiM-to-PxPyPzE($particle3)
       )
     )
 };
 
-declare function hep:AddPtEtaPhiM2($particleOne, $particleTwo) {
-  hep:PxPyPzE2PtEtaPhiM(
-    hep:AddPxPyPzE2(
-      hep:PtEtaPhiM2PxPyPzE($particleOne),
-      hep:PtEtaPhiM2PxPyPzE($particleTwo)
+declare function hep:add-PtEtaPhiM($particle1, $particle2) {
+  hep:PxPyPzE-to-PtEtaPhiM(
+    hep:add-PxPyPzE(
+      hep:PtEtaPhiM-to-PxPyPzE($particle1),
+      hep:PtEtaPhiM-to-PxPyPzE($particle2)
       )
     )
 };
 
-declare function hep:DeltaPhi($phi1, $phi2) {
+declare function hep:delta-phi($phi1, $phi2) {
   ($phi1 - $phi2 + pi()) mod (2 * pi()) - pi()
 };
 
-declare function hep:DeltaR($p1, $p2) {
-  let $deltaEta := $p1.eta - $p2.eta
-  let $deltaPhi := hep:DeltaPhi($p1.phi, $p2.phi)
-  return sqrt($deltaPhi * $deltaPhi + $deltaEta * $deltaEta)
+declare function hep:delta-R($p1, $p2) {
+  let $delta-eta := $p1.eta - $p2.eta
+  let $delta-phi := hep:delta-phi($p1.phi, $p2.phi)
+  return sqrt($delta-phi * $delta-phi + $delta-eta * $delta-eta)
 };
 
-declare function hep:ConcatLeptons($event) {
+declare function hep:concat-leptons($event) {
   let $muons := (
     for $muon in $event.muons[]
     return {| $muon, {"type": "m"}  |}

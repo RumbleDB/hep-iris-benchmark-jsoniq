@@ -1,16 +1,16 @@
 import module namespace hep = "../common/hep.jq";
-declare variable $dataPath as anyURI external := anyURI("../../data/Run2012B_SingleMu.root");
+declare variable $input-path as anyURI external := anyURI("../../data/Run2012B_SingleMu.root");
 
 let $filtered := (
-  for $event in hep:RestructureDataParquet($dataPath)
+  for $event in hep:restructure-data-parquet($input-path)
   where $event.nMuon > 1
   where exists(
     for $muon1 at $i in $event.muons[]
     for $muon2 at $j in $event.muons[]
     where $i < $j
     where $muon1.charge != $muon2.charge
-    let $invariantMass := hep:computeInvariantMass($muon1, $muon2)
-    where 60 < $invariantMass and $invariantMass < 120
+    let $invariant-mass := hep:compute-invariant-mass($muon1, $muon2)
+    where 60 < $invariant-mass and $invariant-mass < 120
     return {}
   )
   return $event.MET_sumet
