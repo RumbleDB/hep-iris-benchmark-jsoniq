@@ -8,7 +8,7 @@ The purpose of this repository is to study the suitability of JSONiq for HEP ana
 
 ## Query Implementations
 
-There are currently two sets of implementations: an *index-based* (stored in [`queries/index-based/`](queries/index-based/) and an *object-based* one (stored in [`queries/object-based/`](queries/object-based/)). The index-based implementation directly manipulates the columnar data model as it is typically exposed by existing HEP tools and which corresponds how data is physically stored in ROOT files. For example, computing the invariant mass looks loke [this](queries/common/hep-i.jq), using `$i` and `$j` to extract `eta`, `phi`, and `pt` from two events:
+There are currently three sets of implementations: one *index-based* (stored in [`queries/index-based/`](queries/index-based/) and two *object-based* ones (stored in [`queries/shredded-objects/`](queries/shredded-objects/) and [`queries/native-objects/`](queries/native-objects/)). The index-based implementation directly manipulates the columnar data model as it is typically exposed by existing HEP tools and which corresponds how data is physically stored in ROOT files. For example, computing the invariant mass looks loke [this](queries/common/hep-i.jq), using `$i` and `$j` to extract `eta`, `phi`, and `pt` from two events:
 
 ```xquery
 let $eta-diff := $event.Muon_eta[[$i]] - $event.Muon_eta[[$j]]
@@ -19,13 +19,13 @@ let $invariant-mass :=
 return $invariant-mass
 ```
 
-The object-based implementation restructures each event first by constructing the objects from its values in the different columns. The same computation then looks like [this](queries/common/query.jq):
+The object-based implementations restructure each event first by reconstructing the objects from its values in the different columns. The same computation then looks like [this](queries/common/query.jq):
 
 ```xquery
   2 * $m1.pt * $m2.pt * (math:cosh($m1.eta - $m2.eta) - cos($m1.phi - $m2.phi))
 ```
 
-While this is clearly more readable, the restructuring may have an overhead and access data that is in fact not needed. However, due to the high-level nature of JSONiq, it is possible to eliminate both; this is in fact a standard feature of SQL optimizers and the same techniques can be applied to JSONiq. Finally, it may be possible to read the data directly as objects even from columnar data, as it is common to do for example with [Parquet](https://parquet.apache.org/) (in which case it is also possible and common to load only the required data from file).
+While this is clearly more readable, the restructuring may have an overhead and access data that is in fact not needed. The two object-based versions thus do this restructuring in different points in time: `shredded-objects` reads the same file as the `index-based` queries and restructures the events on the fly, while `native-objects` expects the file to contain restructured events already (using the method described below). Otherwise, the query implementations are largely identical. Since in `native-objects` the restructuring is materialized in the file, it should be free at query time, whereas it may have an overhead in `shredded-objects`. At least in theory, due to the high-level nature of JSONiq, it should also possible to eliminate that overhead; this is in fact a standard feature of SQL optimizers and the same techniques can be applied to JSONiq.
 
 ## Prerequisites
 
@@ -76,12 +76,27 @@ spark-submit \
     --packages edu.vanderbilt.accre:laurelin:1.1.1 \
     tools/root2parquet.py \
         -i data/Run2012B_SingleMu.root \
-        -0 data/Run2012B_SingleMu.parquet
+        -o data/Run2012B_SingleMu.parquet
 ```
+
+This may create several *partitions*, each of which is a valid Parquet file. Spark (and hence Rumble) is able to read all those files as one input data set. However, if your input is small enough or you are running on a single core, you may also just get a single file, which you can then rename.
+
+### Restructuring into Native Objects
+
+From the root of this repository, run the following command:
+
+```bash
+spark-submit \
+    tools/restructure.py \
+        -i data/Run2012B_SingleMu.parquet \
+        -o data/Run2012B_SingleMu-restructured.parquet
+```
+
+This may produce a partitioned data set as with the previous script.
 
 ### Naming Convention for this Implementation
 
-`test_queries.py` looks for the input files in `data/` with names of the form `Run2012B_SingleMu{suffix}.parquet`, where `{suffix}` is empty for the full data set and `-{num_events}` for a sample of `{num_events}`. It also looks for reference results in `queries/{query_name}/ref{suffix}.csv` with the same `{suffix}`. It also looks for reference results in `queries/{query_name}/ref{suffix}.csv` with the same `{suffix}`..
+`test_queries.py` looks for the input files in `data/` with names of the form `Run2012B_SingleMu{restructured}{suffix}.parquet`, where `{restructured}` is `-restructured` for the `native-objects` queries, and `{suffix}` is empty for the full data set and `-{num_events}` for a sample of `{num_events}`. It also looks for reference results in `queries/{query_name}/ref{suffix}.csv` with the same `{suffix}`. It also looks for reference results in `queries/{query_name}/ref{suffix}.csv` with the same `{suffix}`.
 
 ## Running Queries
 
@@ -116,10 +131,10 @@ custom options:
 ...
 ```
 
-For example, to run all queries containing `object-based` on the test data set with 150 events using a local server, do the following:
+For example, to run all queries containing `shredded-objects` on the test data set with 150 events using a local server, do the following:
 
 ```bash
-./test_queries.py -v -N 150 --rumble-server http://localhost:8001/jsoniq -k object-based
+./test_queries.py -v -N 150 --rumble-server http://localhost:8001/jsoniq -k shredded-objects
 ```
 
 ## Known Issues

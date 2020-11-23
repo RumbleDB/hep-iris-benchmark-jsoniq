@@ -95,10 +95,11 @@ def test_query(query_id, pytestconfig, rumble):
     # Assemble variables
     variables = {}
 
+    restructured = '-restructured' if 'native-objects' in query_id else ''
     input_path = pytestconfig.getoption('input_path')
     input_path = input_path or \
         join(root_dir, 'data',
-             'Run2012B_SingleMu{}.parquet'.format(num_events))
+             'Run2012B_SingleMu{}{}.parquet'.format(restructured, num_events))
     variables['input-path'] = input_path
 
     # Run query and read result
