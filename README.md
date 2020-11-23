@@ -1,6 +1,31 @@
-# Root: Rumble Queries
+# High-energy Physics Analysis Queries in JSONiq/Rumble
 
-This repository hosts the queries described [here](https://github.com/iris-hep/adl-benchmarks-index). The queries are written in the JSONiq programming language, and are meant to be executed on Rumble over Spark. The primary goal is to show that JSONiq can model complex queries with relative ease and high legibility. The secondary goal of this project refers to identifying limitations of JSONiq and Rumble, and finding solutions for them.
+This repository contains implementations of High-energy Physics (HEP) analysis queries from [the IRIS HEP benchmark](https://github.com/iris-hep/adl-benchmarks-index) written in [JSONiq](https://www.jsoniq.org/) to be run on [Rumble](https://rumbledb.org).
+
+## Motivation
+
+The purpose of this repository is to study the suitability of JSONiq for HEP analyses and to serve as a use case for improving Rumble. While JSONiq has been originally designed for dealing with JSON documents, we believe that it might be suited for HEP analyses as well. Compared to many existing HEP tools, it is a higher-level language that separates the logic of the analyses from how data is stored and how the query is executed more (which has many advantages, but also some disadvantages). Compared to SQL it has better support for the nestedness of both data and queries typically found in HEP and is standardized and hence portable across different JSONiq implementations.
+
+## Query Implementations
+
+There are currently two sets of implementations: an *index-based* (stored in [`queries/i-*`](queries/)) and an *object-based* one (stored in [`queries/o-*`](queries/)). The index-based implementation directly manipulates the columnar data model as it is typically exposed by existing HEP tools and which corresponds how data is physically stored in ROOT files. For example, computing the invariant mass looks loke [this](queries/common/hep-i.jq), using `$i` and `$j` to extract `eta`, `phi`, and `pt` from two events:
+
+```xquery
+let $eta-diff := $event.Muon_eta[[$i]] - $event.Muon_eta[[$j]]
+let $phi-diff := $event.Muon_phi[[$i]] - $event.Muon_phi[[$j]]
+let $cosh := (exp($eta-diff) + exp(-$eta-diff)) div 2
+let $invariant-mass :=
+  2 * $event.Muon_pt[[$i]] * $event.Muon_pt[[$j]] * ($cosh - cos($phi-diff))
+return $invariant-mass
+```
+
+The object-based implementation restructures each event first by constructing the objects from its values in the different columns. The same computation then looks like [this](queries/common/query.jq):
+
+```xquery
+  2 * $m1.pt * $m2.pt * (math:cosh($m1.eta - $m2.eta) - cos($m1.phi - $m2.phi))
+```
+
+While this is clearly more readable, the restructuring may have an overhead and access data that is in fact not needed. However, due to the high-level nature of JSONiq, it is possible to eliminate both; this is in fact a standard feature of SQL optimizers and the same techniques can be applied to JSONiq. Finally, it may be possible to read the data directly as objects even from columnar data, as it is common to do for example with [Parquet](https://parquet.apache.org/) (in which case it is also possible and common to load only the required data from file).
 
 ## Prerequisites
 
@@ -94,10 +119,6 @@ For example, to run all queries containing `o-` on the test data set with 150 ev
 ```bash
 ./test_queries.py -v -N 150 --rumble-server http://localhost:8001/jsoniq -k o-6-1
 ```
-
-## Query Types
-
-The `rumble` directory hosts two sub-folders: `entity_based_queries` and `index_based_queries`. Both are supposed to implement the same set of queries. The difference between the two is that `entity_based_queries` employs a transformation of the data, such that each particle will be represented by a dictionary which encapsulates the particle's properties. That is to say, each particle will be represented by an object-like entity. The `index_based_queries` on the other hand use the available data directly and employ classical indexing-based traversals of the data. The former should technically be more readable, whereas the latter should be more efficient.
 
 ## Known Issues
 
