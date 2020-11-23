@@ -3,7 +3,7 @@ declare variable $input-path as anyURI external := anyURI("../../../data/Run2012
 
 let $filtered :=
   for $event in hep:restructure-data-parquet($input-path)
-  where count($event.jets[][$$.pt > 40]) > 1
+  where count($event.Jet[][$$.pt > 40]) > 1
   return $event.MET_sumet
 
 return hep:histogram($filtered, 0, 2000, 100)

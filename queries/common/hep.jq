@@ -80,9 +80,9 @@ declare function hep:restructure-event($event) {
   let $jets := hep:make-jets($event)
   return {| $event,
            {
-              "muons": [ $muons ],
-              "electrons": [ $electrons ],
-              "jets": [ $jets ]
+              "Muon": [ $muons ],
+              "Electron": [ $electrons ],
+              "Jet": [ $jets ]
            }
          |}
 };
@@ -178,12 +178,12 @@ declare function hep:delta-R($p1, $p2) {
 
 declare function hep:concat-leptons($event) {
   let $muons := (
-    for $muon in $event.muons[]
+    for $muon in $event.Muon[]
     return {| $muon, {"type": "m"}  |}
   )
 
   let $electrons := (
-    for $electron in $event.electrons[]
+    for $electron in $event.Electron[]
     return {| $electron, {"type": "e"}  |}
   )
 

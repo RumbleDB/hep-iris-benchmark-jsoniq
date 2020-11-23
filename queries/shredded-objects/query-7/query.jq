@@ -5,7 +5,7 @@ let $filtered := (
   for $event in hep:restructure-data-parquet($input-path)
 
   let $filtered-jets := (
-    for $jet in $event.jets[]
+    for $jet in $event.Jet[]
     where $jet.pt > 30
 
     let $leptons := hep:concat-leptons($event)

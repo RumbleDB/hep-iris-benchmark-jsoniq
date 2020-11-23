@@ -1,5 +1,5 @@
 import module namespace hep = "../../common/hep.jq";
-import module namespace o-8 = "../query-8-common/common.jq";
+import module namespace query-8 = "../query-8-common/common.jq";
 declare variable $input-path as anyURI external := anyURI("../../../data/Run2012B_SingleMu.root");
 
 let $filtered := (
@@ -7,7 +7,7 @@ let $filtered := (
   where integer($event.nMuon + $event.nElectron) > 2
 
   let $leptons := hep:concat-leptons($event)
-  let $closest-lepton-pair := o-8:find-closest-lepton-pair($leptons)
+  let $closest-lepton-pair := query-8:find-closest-lepton-pair($leptons)
   where exists($closest-lepton-pair)
 
   return max(

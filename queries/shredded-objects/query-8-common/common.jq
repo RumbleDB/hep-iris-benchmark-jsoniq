@@ -1,7 +1,7 @@
-module namespace o-8 = "common.jq";
+module namespace query-8 = "common.jq";
 import module namespace hep = "../../common/hep.jq";
 
-declare function o-8:find-closest-lepton-pair($leptons) {
+declare function query-8:find-closest-lepton-pair($leptons) {
   (
     for $lepton1 at $i in $leptons
     for $lepton2 at $j in $leptons

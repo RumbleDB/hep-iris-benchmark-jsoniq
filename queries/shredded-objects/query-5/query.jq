@@ -5,8 +5,8 @@ let $filtered := (
   for $event in hep:restructure-data-parquet($input-path)
   where $event.nMuon > 1
   where exists(
-    for $muon1 at $i in $event.muons[]
-    for $muon2 at $j in $event.muons[]
+    for $muon1 at $i in $event.Muon[]
+    for $muon2 at $j in $event.Muon[]
     where $i < $j
     where $muon1.charge != $muon2.charge
     let $invariant-mass := hep:compute-invariant-mass($muon1, $muon2)
