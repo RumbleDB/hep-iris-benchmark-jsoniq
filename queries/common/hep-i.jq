@@ -1,5 +1,5 @@
 module namespace hep-i = "hep-i.jq";
-import module namespace hep = "../common/hep.jq";
+import module namespace hep = "hep.jq";
 
 declare function hep-i:compute-invariant-mass($event, $i, $j) {
   let $eta-diff := $event.Muon_eta[[$i]] - $event.Muon_eta[[$j]]

@@ -1,5 +1,5 @@
 module namespace hep = "hep.jq";
-import module namespace math = "../common/math.jq";
+import module namespace math = "math.jq";
 
 declare function hep:histogram($values, $lo, $hi, $num-bins) {
   let $width := ($hi - $lo) div $num-bins
