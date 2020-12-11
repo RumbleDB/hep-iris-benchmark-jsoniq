@@ -91,7 +91,9 @@ Run all queries on the full data set using `rumble.sh` from above with the follo
 ./test_queries.py -v
 ```
 
-Run following to see more options
+This will currently fail as we do not have a reference result for the full data set yet. Use `-N 150` or `-N 1000` to test with 150 or 1000 events, respectively.
+
+Run the following command to see more options
 
 ```
 $ ./test_queries.py --help
