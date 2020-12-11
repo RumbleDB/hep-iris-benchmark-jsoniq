@@ -8,7 +8,7 @@ The purpose of this repository is to study the suitability of JSONiq for HEP ana
 
 ## Query Implementations
 
-There are currently two sets of implementations: an *index-based* (stored in [`queries/i-*`](queries/)) and an *object-based* one (stored in [`queries/o-*`](queries/)). The index-based implementation directly manipulates the columnar data model as it is typically exposed by existing HEP tools and which corresponds how data is physically stored in ROOT files. For example, computing the invariant mass looks loke [this](queries/common/hep-i.jq), using `$i` and `$j` to extract `eta`, `phi`, and `pt` from two events:
+There are currently two sets of implementations: an *index-based* (stored in [`queries/index-based/`](queries/index-based/) and an *object-based* one (stored in [`queries/object-based/`](queries/object-based/)). The index-based implementation directly manipulates the columnar data model as it is typically exposed by existing HEP tools and which corresponds how data is physically stored in ROOT files. For example, computing the invariant mass looks loke [this](queries/common/hep-i.jq), using `$i` and `$j` to extract `eta`, `phi`, and `pt` from two events:
 
 ```xquery
 let $eta-diff := $event.Muon_eta[[$i]] - $event.Muon_eta[[$j]]
@@ -114,10 +114,10 @@ custom options:
 ...
 ```
 
-For example, to run all queries containing `o-` on the test data set with 150 events using a local server, do the following:
+For example, to run all queries containing `object-based` on the test data set with 150 events using a local server, do the following:
 
 ```bash
-./test_queries.py -v -N 150 --rumble-server http://localhost:8001/jsoniq -k o-6-1
+./test_queries.py -v -N 150 --rumble-server http://localhost:8001/jsoniq -k object-based
 ```
 
 ## Known Issues
