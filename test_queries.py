@@ -122,6 +122,7 @@ def test_query(query_id, pytestconfig, rumble):
         from matplotlib import pyplot as plt
         plt.hist(df.x, bins=len(df.index), weights=df.y)
         plt.savefig(png_file)
+        plt.close()
 
     # Normalize reference and query result
     df = df[df.y > 0]
