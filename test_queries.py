@@ -36,7 +36,7 @@ class RumbleCliProxy(RumbleProxy):
         # Run query and read result
         output = subprocess.check_output(cmd, encoding='utf-8')
 
-        return json.loads(output)
+        return [json.loads(line) for line in output.splitlines() if line]
 
 
 class RumbleServerProxy(RumbleProxy):

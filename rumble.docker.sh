@@ -2,5 +2,5 @@
 
 docker run --rm \
     -v $PWD:$PWD \
-    rumbledb/rumble:v1.8.1-spark3 \
+    rumbledb/rumble:v1.10.0-spark3 \
     "$@"
