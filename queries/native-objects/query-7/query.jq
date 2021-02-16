@@ -11,7 +11,7 @@ let $filtered := (
     let $leptons := hep:concat-leptons($event)
     where empty(
       for $lepton in $leptons
-      where $lepton.pt > 10 and hep:delta-R($jet, $lepton) < 40
+      where $lepton.pt > 10 and hep:delta-R($jet, $lepton) < 0.4
       return {}
     )
 

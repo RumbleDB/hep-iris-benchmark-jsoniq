@@ -15,7 +15,7 @@ let $filtered := (
     let $delta-R := hep-i:delta-R(
       $event.Jet_phi[[$i]], $leptons.phi[[$j]],
       $event.Jet_eta[[$i]], $leptons.eta[[$j]])
-    where $leptons.pt[[$j]] > 10 and $delta-R < 40
+    where $leptons.pt[[$j]] > 10 and $delta-R < 0.4
     return {}
   )
 
