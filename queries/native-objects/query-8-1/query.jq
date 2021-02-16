@@ -17,8 +17,8 @@ let $filtered := (
     return $lepton
   )[1]
 
-  return 2 * $event.MET.pt * $other-leption.pt *
-    (1.0 - cos(hep:delta-phi($event.MET.phi, $other-leption.phi)))
+  return sqrt(2 * $event.MET.pt * $other-leption.pt *
+    (1.0 - cos(hep:delta-phi($event.MET.phi, $other-leption.phi))))
 )
 
 return hep:histogram($filtered, 15, 250, 100)

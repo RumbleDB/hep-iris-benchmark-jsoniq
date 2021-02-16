@@ -20,8 +20,8 @@ let $filtered := (
 
   let $other-lepton-pt := $leptons.pt[[$leading-other-lepton-idx]]
   let $other-lepton-phi := $leptons.phi[[$leading-other-lepton-idx]]
-  return 2 * $event.MET_pt * $other-lepton-pt *
-    (1.0 - cos(hep:delta-phi($event.MET_phi, $other-lepton-phi)))
+  return sqrt(2 * $event.MET_pt * $other-lepton-pt *
+    (1.0 - cos(hep:delta-phi($event.MET_phi, $other-lepton-phi))))
 )
 
 return hep:histogram($filtered, 15, 250, 100)
