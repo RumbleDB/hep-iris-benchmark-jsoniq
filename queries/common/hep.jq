@@ -106,7 +106,7 @@ declare function hep:PtEtaPhiM-to-PxPyPzE($vect) {
   let $y := $vect.pt * sin($vect.phi)
   let $z := $vect.pt * math:sinh($vect.eta)
   let $temp := $vect.pt * math:cosh($vect.eta)
-  let $e := $temp * $temp + $vect.mass * $vect.mass
+  let $e := sqrt($temp * $temp + $vect.mass * $vect.mass)
   return {"x": $x, "y": $y, "z": $z, "e": $e}
 };
 
