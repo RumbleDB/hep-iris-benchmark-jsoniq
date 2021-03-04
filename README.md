@@ -94,6 +94,10 @@ spark-submit \
 
 This may produce a partitioned data set as with the previous script.
 
+### Extracting, Converting, and Restructuting of Several Samples
+
+[`extract_samples.sh`](/tools/extract_samples.sh) does the three previous steps in one go for all sample sizes of `n=2**$l*1000` for `l={0..16}`. (Notice that there are fewer than `2**16` events in the original data set so the largest sample contains the full data set and has a misleading file name.) You may need to edit the script to match the paths of some executables or modify your `PATH` accordingly.
+
 ### Naming Convention for this Implementation
 
 `test_queries.py` looks for the input files in `data/` with names of the form `Run2012B_SingleMu{restructured}{suffix}.parquet`, where `{restructured}` is `-restructured` for the `native-objects` queries, and `{suffix}` is empty for the full data set and `-{num_events}` for a sample of `{num_events}`. It also looks for reference results in `queries/{query_name}/ref{suffix}.csv` with the same `{suffix}`. It also looks for reference results in `queries/{query_name}/ref{suffix}.csv` with the same `{suffix}`.
