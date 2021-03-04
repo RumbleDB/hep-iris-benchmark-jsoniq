@@ -5,8 +5,10 @@ from pyspark.sql.functions import *
 from pyspark.sql import types
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-i', '--input',  help='Input Parquet file')
-parser.add_argument('-o', '--output', help='Output Parquet file')
+parser.add_argument('-i', '--input',  help='Input Parquet file (or path)')
+parser.add_argument('-o', '--output', help='Output folder with Parquet file(s)')
+parser.add_argument('-n', '--num-files', default=1,
+                    help='Number of Parquet files')
 args = parser.parse_args()
 
 spark = pyspark.sql.SparkSession.builder.getOrCreate()
@@ -80,4 +82,4 @@ for field_name in list_struct_fields:
         arrays_zip(*sub_field_expr).cast(field_type).alias(field_name))
 
 # Write to output file with computed expressions
-df.select(*expressions).write.parquet(args.output)
+df.select(*expressions).coalesce(args.num_files).write.parquet(args.output)

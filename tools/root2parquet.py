@@ -3,9 +3,11 @@ import argparse
 import pyspark.sql
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-i', '--input',  help='Input ROOT file')
-parser.add_argument('-o', '--output', help='Output Parquet file')
-parser.add_argument('-t', '--tree',   default='Events',
+parser.add_argument('-i', '--input',  help='Input ROOT file (or path)')
+parser.add_argument('-o', '--output', help='Output folder with Parquet file(s)')
+parser.add_argument('-n', '--num-files', default=1,
+                    help='Number of Parquet files')
+parser.add_argument('-t', '--tree',      default='Events',
                     help='Name of tree to open')
 args = parser.parse_args()
 
@@ -15,4 +17,4 @@ spark = pyspark.sql.SparkSession.builder \
 df = spark.read.format('root') \
                .option('tree', args.tree) \
                .load(args.input)
-df.write.parquet(args.output)
+df.coalesce(args.num_files).write.parquet(args.output)

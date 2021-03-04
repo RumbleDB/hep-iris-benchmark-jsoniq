@@ -79,7 +79,7 @@ spark-submit \
         -o data/Run2012B_SingleMu.parquet
 ```
 
-This may create several *partitions*, each of which is a valid Parquet file. Spark (and hence Rumble) is able to read all those files as one input data set. However, if your input is small enough or you are running on a single core, you may also just get a single file, which you can then rename.
+This may create several *partitions*, each of which is a valid Parquet file. Spark (and hence Rumble) is able to read all those files as one input data set. If you want to control the number of partitions (and hence files), use the `--num-files` flag.
 
 ### Restructuring into Native Objects
 
