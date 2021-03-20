@@ -1,5 +1,4 @@
 import module namespace hep = "../../common/hep.jq";
-import module namespace query-8 = "../query-8-common/common.jq";
 declare variable $input-path as anyURI external := anyURI("../../../data/Run2012B_SingleMu.root");
 
 let $filtered := (
@@ -7,7 +6,14 @@ let $filtered := (
   where size($event.Muon) + size($event.Electron) > 2
 
   let $leptons := hep:concat-leptons($event)
-  let $closest-lepton-pair := query-8:find-closest-lepton-pair($leptons)
+  let $closest-lepton-pair := (
+    for $lepton1 at $i in $leptons
+    for $lepton2 at $j in $leptons
+    where $i < $j
+    where $lepton1.type = $lepton2.type and $lepton1.charge != $lepton2.charge
+    order by abs(91.2 - hep:add-PtEtaPhiM($lepton1, $lepton2).mass) ascending
+    return {"i": $i, "j": $j}
+  )[1]
   where exists($closest-lepton-pair)
 
   let $other-leption := (
