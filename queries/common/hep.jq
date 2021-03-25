@@ -7,12 +7,13 @@ declare function hep:histogram($values, $lo, $hi, $num-bins) {
 
   let $underflow := round(($lo - $half-width) div $width)
   let $overflow := round(($hi - $half-width) div $width)
+  return
 
   for $v in $values
   let $bucket-idx :=
-    if ($v < $lo) then $underflow
+    if ($v lt $lo) then $underflow
     else
-      if ($v > $hi) then $overflow
+      if ($v gt $hi) then $overflow
       else round(($v - $half-width) div $width)
   let $center := $bucket-idx * $width + $half-width
 
