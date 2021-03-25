@@ -2,18 +2,20 @@ module namespace hep = "hep.jq";
 import module namespace math = "math.jq";
 
 declare function hep:histogram($values, $lo, $hi, $num-bins) {
-  let $width := ($hi - $lo) div $num-bins
+  let $flo := float($lo)
+  let $fhi := float($hi)
+  let $width := ($fhi - $flo) div float($num-bins)
   let $half-width := $width div 2
 
-  let $underflow := round(($lo - $half-width) div $width)
-  let $overflow := round(($hi - $half-width) div $width)
+  let $underflow := round(($flo - $half-width) div $width)
+  let $overflow := round(($fhi - $half-width) div $width)
   return
 
   for $v in $values
   let $bucket-idx :=
-    if ($v lt $lo) then $underflow
+    if ($v lt $flo) then $underflow
     else
-      if ($v gt $hi) then $overflow
+      if ($v gt $fhi) then $overflow
       else round(($v - $half-width) div $width)
   let $center := $bucket-idx * $width + $half-width
 
