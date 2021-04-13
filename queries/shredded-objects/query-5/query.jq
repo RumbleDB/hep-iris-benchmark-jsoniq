@@ -13,7 +13,7 @@ let $filtered := (
     where 60 < $invariant-mass and $invariant-mass < 120
     return {}
   )
-  return $event.MET_sumet
+  return $event.MET_pt
 )
 
 return hep:histogram($filtered, 0, 2000, 100)
