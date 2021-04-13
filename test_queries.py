@@ -111,6 +111,12 @@ def test_query(query_id, pytestconfig, rumble):
     running_time = end_timestamp - start_timestamp
     logging.info('Running time: {:.2f}s'.format(running_time))
 
+    # Normalize query result
+    df = df[df.y > 0]
+    df = df[['x', 'y']]
+    df.x = df.x.astype(float).round(6)
+    df.reset_index(drop=True, inplace=True)
+
     # Freeze reference result
     if pytestconfig.getoption('freeze_result'):
         df.to_csv(ref_file, sep=',', index=False)
@@ -125,12 +131,10 @@ def test_query(query_id, pytestconfig, rumble):
         plt.savefig(png_file)
         plt.close()
 
-    # Normalize reference and query result
-    df = df[df.y > 0]
-    df = df[['x', 'y']]
-    df.reset_index(drop=True, inplace=True)
+    # Normalize reference result
     df_ref = df_ref[df_ref.y > 0]
     df_ref = df_ref[['x', 'y']]
+    df_ref.x = df_ref.x.astype(float).round(6)
     df_ref.reset_index(drop=True, inplace=True)
 
     # Assert correct result
