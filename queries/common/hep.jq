@@ -97,7 +97,7 @@ declare function hep:restructure-data-parquet($path) {
 };
 
 declare function hep:compute-invariant-mass($m1, $m2) {
-  2 * $m1.pt * $m2.pt * (math:cosh($m1.eta - $m2.eta) - cos($m1.phi - $m2.phi))
+  sqrt(2 * $m1.pt * $m2.pt * (math:cosh($m1.eta - $m2.eta) - cos($m1.phi - $m2.phi)))
 };
 
 declare function hep:PtEtaPhiM-to-PxPyPzE($vect) {

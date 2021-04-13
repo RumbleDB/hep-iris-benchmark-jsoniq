@@ -6,7 +6,7 @@ declare function hep-i:compute-invariant-mass($event, $i, $j) {
   let $phi-diff := $event.Muon_phi[[$i]] - $event.Muon_phi[[$j]]
   let $cosh := (exp($eta-diff) + exp(-$eta-diff)) div 2
   let $invariant-mass :=
-    2 * $event.Muon_pt[[$i]] * $event.Muon_pt[[$j]] * ($cosh - cos($phi-diff))
+    sqrt(2 * $event.Muon_pt[[$i]] * $event.Muon_pt[[$j]] * ($cosh - cos($phi-diff)))
   return $invariant-mass
 };
 
