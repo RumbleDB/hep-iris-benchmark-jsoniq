@@ -4,21 +4,20 @@ import module namespace math = "math.jq";
 declare function hep:histogram($values, $lo, $hi, $num-bins) {
   let $width := ($hi - $lo) div $num-bins
   let $half-width := $width div 2
+  let $offset := $lo mod $half-width
 
-  let $underflow := round(($lo - $half-width) div $width)
-  let $overflow := round(($hi - $half-width) div $width)
-
-  for $v in $values
-  let $bucket-idx :=
-    if ($v < $lo) then $underflow
+  for $value in $values
+  let $truncated-value :=
+    if ($value < $lo) then $lo - $half-width
     else
-      if ($v > $hi) then $overflow
-      else round(($v - $half-width) div $width)
-  let $center := $bucket-idx * $width + $half-width
+      if ($value > $hi) then $hi + $half-width
+      else $value - $offset
+  let $bucket-idx := floor($truncated-value div $width)
+  let $center := $bucket-idx * $width + $half-width + $offset
 
   group by $center
   order by $center
-  return {"x": $center, "y": count($v)}
+  return {"x": $center, "y": count($value)}
 };
 
 declare function hep:make-muons($event) {
