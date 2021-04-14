@@ -110,7 +110,7 @@ Run all queries on the full data set using `rumble.sh` from above with the follo
 ./test_queries.py -v
 ```
 
-This will currently fail as we do not have a reference result for the full data set yet. Use `-N 150` or `-N 1000` to test with 150 or 1000 events, respectively.
+This will currently fail as we do not have a reference result for the full data set yet. Use `-N 1000` to test with 1000 events, respectively.
 
 Run the following command to see more options
 
@@ -135,10 +135,10 @@ custom options:
 ...
 ```
 
-For example, to run all queries containing `shredded-objects` on the test data set with 150 events using a local server, do the following:
+For example, to run all queries containing `shredded-objects` on the test data set with 1000 events using a local server, do the following:
 
 ```bash
-./test_queries.py -v -N 150 --rumble-server http://localhost:8001/jsoniq -k shredded-objects
+./test_queries.py -v -N 1000 --rumble-server http://localhost:8001/jsoniq -k shredded-objects
 ```
 
 ## Known Issues
