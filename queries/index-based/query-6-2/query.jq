@@ -5,10 +5,10 @@ declare variable $input-path as anyURI external := anyURI("../../../data/Run2012
 let $filtered :=
   for $event in parquet-file($input-path)
   where $event.nJet > 2
-  let $min-triplet-idxs := i-6:find-min-triplet-idx($event)
+  let $min-triplet := i-6:find-min-triplet-idx($event)
 
   return max(
-    for $i in $min-triplet-idxs[]
+    for $i in $min-triplet.idxs[]
     return $event.Jet_btag[[$i]]
   )
 

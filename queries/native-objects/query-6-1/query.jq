@@ -5,6 +5,6 @@ declare variable $input-path as anyURI external := anyURI("../../../data/Run2012
 let $filtered :=
   for $event in parquet-file($input-path)
   where size($event.Jet) > 2
-  return query-6:find-min-triplet($event).pt
+  return query-6:find-min-triplet($event).trijet.pt
 
 return hep:histogram($filtered, 15, 40, 100)

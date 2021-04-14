@@ -12,6 +12,6 @@ declare function i-6:find-min-triplet-idx($event) {
     let $particle3 := hep-i:make-jet($event, $k)
     let $tri-jet := hep:make-tri-jet($particle1, $particle2, $particle3)
     order by abs(172.5 - $tri-jet.mass) ascending
-    return [$i, $j, $k]
+    return {"trijet": $tri-jet, "idxs": [$i, $j, $k]}
   )[1]
 };

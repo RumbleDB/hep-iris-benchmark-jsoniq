@@ -6,6 +6,6 @@ let $filtered :=
   for $event in parquet-file($input-path)
   where size($event.Jet) > 2
   let $min-triplet := query-6:find-min-triplet($event)
-  return max($min-triplet.btag)
+  return max($min-triplet.jets[].btag)
 
 return hep:histogram($filtered, 0, 1, 100)
