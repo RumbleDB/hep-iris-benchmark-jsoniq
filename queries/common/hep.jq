@@ -2,22 +2,25 @@ module namespace hep = "hep.jq";
 import module namespace math = "math.jq";
 
 declare function hep:histogram($values, $lo, $hi, $num-bins) {
-  let $width := ($hi - $lo) div $num-bins
+  let $flo := float($lo)
+  let $fhi := float($hi)
+  let $width := ($fhi - $flo) div float($num-bins)
   let $half-width := $width div 2
-  let $offset := $lo mod $half-width
+  let $offset := $flo mod $half-width
 
-  for $value in $values
-  let $truncated-value :=
-    if ($value < $lo) then $lo - $half-width
-    else
-      if ($value > $hi) then $hi + $half-width
-      else $value - $offset
-  let $bucket-idx := floor($truncated-value div $width)
-  let $center := $bucket-idx * $width + $half-width + $offset
+  return
+    for $value in $values
+    let $truncated-value :=
+      if ($value lt $flo) then $flo - $half-width
+      else
+        if ($value gt $fhi) then $fhi + $half-width
+        else $value - $offset
+    let $bucket-idx := floor($truncated-value div $width)
+    let $center := $bucket-idx * $width + $half-width + $offset
 
-  group by $center
-  order by $center
-  return {"x": $center, "y": count($value)}
+    group by $center
+    order by $center
+    return {"x": $center, "y": count($value)}
 };
 
 declare function hep:make-muons($event) {
